@@ -16,9 +16,9 @@ class BelongsTo extends Relation
 {
 	protected $singular = true;
 
-	protected $key_from = array();
+	protected $key_from = [];
 
-	protected $key_to = array('id');
+	protected $key_to = ['id'];
 
 	public function __construct($from, $name, array $config)
 	{
@@ -31,7 +31,7 @@ class BelongsTo extends Relation
 		$this->key_to      = array_key_exists('key_to', $config)
 			? (array) $config['key_to'] : $this->key_to;
 		$this->conditions  = array_key_exists('conditions', $config)
-			? (array) $config['conditions'] : array();
+			? (array) $config['conditions'] : [];
 
 		$this->cascade_save    = array_key_exists('cascade_save', $config)
 			? $config['cascade_save'] : $this->cascade_save;
@@ -45,9 +45,9 @@ class BelongsTo extends Relation
 		$this->model_to = get_real_class($this->model_to);
 	}
 
-	public function get(Model $from, array $conditions = array())
+	public function get(Model $from, array $conditions = [])
 	{
-		$query = call_user_func(array($this->model_to, 'query'));
+		$query = call_user_func([$this->model_to, 'query']);
 		reset($this->key_to);
 		foreach ($this->key_from as $key)
 		{
@@ -61,46 +61,46 @@ class BelongsTo extends Relation
 		}
 
 		$conditions = \Arr::merge($this->conditions, $conditions);
-		$query->_parse_where_array(\Arr::get($conditions, 'where', array()));
+		$query->_parse_where_array(\Arr::get($conditions, 'where', []));
 
 		return $query->get_one();
 	}
 
-	public function join($alias_from, $rel_name, $alias_to_nr, $conditions = array())
+	public function join($alias_from, $rel_name, $alias_to_nr, $conditions = []): array
 	{
 		$alias_to = 't'.$alias_to_nr;
-		$model = array(
+		$model = [
 			'model'       => $this->model_to,
-			'connection'  => call_user_func(array($this->model_to, 'connection')),
-			'table'       => array(call_user_func(array($this->model_to, 'table')), $alias_to),
-			'primary_key' => call_user_func(array($this->model_to, 'primary_key')),
+			'connection'  => call_user_func([$this->model_to, 'connection']),
+			'table'       => [call_user_func([$this->model_to, 'table']), $alias_to],
+			'primary_key' => call_user_func([$this->model_to, 'primary_key']),
 			'join_type'   => \Arr::get($conditions, 'join_type') ?: \Arr::get($this->conditions, 'join_type', 'left'),
-			'join_on'     => array(),
+			'join_on'     => [],
 			'columns'     => $this->select($alias_to),
-			'rel_name'    => strpos($rel_name, '.') ? substr($rel_name, strrpos($rel_name, '.') + 1) : $rel_name,
+			'rel_name'    => strpos((string) $rel_name, '.') ? substr((string) $rel_name, strrpos((string) $rel_name, '.') + 1) : $rel_name,
 			'relation'    => $this,
-			'where'       => \Arr::get($conditions, 'where', array()),
-			'order_by'    => \Arr::get($conditions, 'order_by') ?: \Arr::get($this->conditions, 'order_by', array()),
-		);
+			'where'       => \Arr::get($conditions, 'where', []),
+			'order_by'    => \Arr::get($conditions, 'order_by') ?: \Arr::get($this->conditions, 'order_by', []),
+		];
 
 		reset($this->key_to);
 		foreach ($this->key_from as $key)
 		{
-			$model['join_on'][] = array($alias_from.'.'.$key, '=', $alias_to.'.'.current($this->key_to));
+			$model['join_on'][] = [$alias_from.'.'.$key, '=', $alias_to.'.'.current($this->key_to)];
 			next($this->key_to);
 		}
-		foreach (array(\Arr::get($this->conditions, 'where', array()), \Arr::get($conditions, 'join_on', array())) as $c)
+		foreach ([\Arr::get($this->conditions, 'where', []), \Arr::get($conditions, 'join_on', [])] as $c)
 		{
 			foreach ($c as $key => $condition)
 			{
-				! is_array($condition) and $condition = array($key, '=', $condition);
-				if ( ! $condition[0] instanceof \Fuel\Core\Database_Expression and strpos($condition[0], '.') === false)
+				! is_array($condition) and $condition = [$key, '=', $condition];
+				if ( ! $condition[0] instanceof \Fuel\Core\Database_Expression and !str_contains((string) $condition[0], '.'))
 				{
 					$condition[0] = $alias_to.'.'.$condition[0];
 				}
 				if (count($condition) == 2) // From Query::_where()
 				{
-					$condition = array($condition[0], '=', $condition[1]);
+					$condition = [$condition[0], '=', $condition[1]];
 				}
 				is_string($condition[2]) and $condition[2] = \Db::quote($condition[2], $model['connection']);
 
@@ -108,10 +108,10 @@ class BelongsTo extends Relation
 			}
 		}
 
-		return array($rel_name => $model);
+		return [$rel_name => $model];
 	}
 
-	public function save($model_from, $model_to, $original_model_id, $parent_saved, $cascade)
+	public function save($model_from, $model_to, $original_model_id, $parent_saved, $cascade): void
 	{
 		if ($parent_saved)
 		{
@@ -149,9 +149,9 @@ class BelongsTo extends Relation
 		// because that is how the model stores them
 		elseif ($current_model_id != null)
 		{
-			$foreign_keys = count($this->key_to) == 1 ? array($original_model_id) : explode('][', substr($original_model_id, 1, -1));
+			$foreign_keys = count($this->key_to) == 1 ? [$original_model_id] : explode('][', substr((string) $original_model_id, 1, -1));
 			$changed      = false;
-			$new_rel_id   = array();
+			$new_rel_id   = [];
 			reset($foreign_keys);
 			$m = $this->model_to;
 			foreach ($m::primary_key() as $pk)
@@ -176,7 +176,7 @@ class BelongsTo extends Relation
 				// Attempt to load the new related object
 				if ( ! is_null($new_rel_id))
 				{
-					$rel_obj = call_user_func(array($this->model_to, 'find'), $new_rel_id);
+					$rel_obj = call_user_func([$this->model_to, 'find'], $new_rel_id);
 					if (empty($rel_obj))
 					{
 						throw new \FuelException('New relation set on '.$this->model_from.' object wasn\'t found.');
@@ -203,7 +203,7 @@ class BelongsTo extends Relation
 		}
 	}
 
-	public function delete($model_from, $model_to, $parent_deleted, $cascade)
+	public function delete($model_from, $model_to, $parent_deleted, $cascade): void
 	{
 		if ( ! $parent_deleted)
 		{

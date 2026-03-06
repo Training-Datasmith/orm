@@ -14,9 +14,9 @@ namespace Orm;
 
 class ManyMany extends Relation
 {
-	protected $key_from = array('id');
+	protected $key_from = ['id'];
 
-	protected $key_to = array('id');
+	protected $key_to = ['id'];
 
 	/**
 	 * @var  string  classname of model to use as connection
@@ -31,12 +31,12 @@ class ManyMany extends Relation
 	/**
 	 * @var  string  foreign key of from model in connection table
 	 */
-	protected $key_through_from;
+	protected array $key_through_from;
 
 	/**
 	 * @var  string  foreign key of to model in connection table
 	 */
-	protected $key_through_to;
+	protected array $key_through_to;
 
 	public function __construct($from, $name, array $config)
 	{
@@ -49,7 +49,7 @@ class ManyMany extends Relation
 		$this->key_to      = array_key_exists('key_to', $config)
 			? (array) $config['key_to'] : $this->key_to;
 		$this->conditions  = array_key_exists('conditions', $config)
-			? (array) $config['conditions'] : array();
+			? (array) $config['conditions'] : [];
 
 		if ( ! empty($config['table_through']))
 		{
@@ -57,7 +57,7 @@ class ManyMany extends Relation
 		}
 		else
 		{
-			$table_name = array($this->model_from, $this->model_to);
+			$table_name = [$this->model_from, $this->model_to];
 			natcasesort($table_name);
 			$table_name = array_merge($table_name);
 			$this->table_through = \Inflector::tableize($table_name[0]).'_'.\Inflector::tableize($table_name[1]);
@@ -79,25 +79,25 @@ class ManyMany extends Relation
 		$this->model_to = get_real_class($this->model_to);
 	}
 
-	public function get(Model $from, array $conditions = array())
+	public function get(Model $from, array $conditions = [])
 	{
 		// Create the query on the model_through
-		$query = call_user_func(array($this->model_to, 'query'));
+		$query = call_user_func([$this->model_to, 'query']);
 
 		// set the model_from's keys as where conditions for the model_through
-		$join = array(
-				'table'      => array($this->table_through, 't0_through'),
+		$join = [
+				'table'      => [$this->table_through, 't0_through'],
 				'join_type'  => null,
-				'join_on'    => array(),
+				'join_on'    => [],
 				'columns'    => $this->select_through('t0_through'),
-		);
+		];
 
 		reset($this->key_from);
 		foreach ($this->key_through_from as $key)
 		{
 			if ($from->{current($this->key_from)} === null)
 			{
-				return array();
+				return [];
 			}
 			$query->where('t0_through.'.$key, $from->{current($this->key_from)});
 			next($this->key_from);
@@ -106,16 +106,16 @@ class ManyMany extends Relation
 		reset($this->key_to);
 		foreach ($this->key_through_to as $key)
 		{
-			$join['join_on'][] = array('t0_through.'.$key, '=', 't0.'.current($this->key_to));
+			$join['join_on'][] = ['t0_through.'.$key, '=', 't0.'.current($this->key_to)];
 			next($this->key_to);
 		}
 
 		$conditions = \Arr::merge($this->conditions, $conditions);
-		$query->_parse_where_array(\Arr::get($conditions, 'where', array()));
+		$query->_parse_where_array(\Arr::get($conditions, 'where', []));
 
-		foreach (\Arr::get($conditions, 'order_by', array()) as $field => $direction)
+		foreach (\Arr::get($conditions, 'order_by', []) as $field => $direction)
 		{
-			if (strpos($field, '.') !== false)
+			if (str_contains($field, '.'))
 			{
 				$parts = explode('.', $field);
 				if ($parts[0] == $join['table'][0])
@@ -140,7 +140,7 @@ class ManyMany extends Relation
 		return $query->get();
 	}
 
-	public function select_through($table)
+	public function select_through(string $table)
 	{
 		foreach ($this->key_through_to as $to)
 		{
@@ -154,65 +154,68 @@ class ManyMany extends Relation
 		return $properties;
 	}
 
-	public function join($alias_from, $rel_name, $alias_to_nr, $conditions = array())
+	/**
+     * @return mixed[]
+     */
+    public function join($alias_from, $rel_name, $alias_to_nr, $conditions = []): array
 	{
 		$alias_to = 't'.$alias_to_nr;
 
-		$alias_through = array($this->table_through, $alias_to.'_through');
-		$alias_to_table = array(call_user_func(array($this->model_to, 'table')), $alias_to);
+		$alias_through = [$this->table_through, $alias_to.'_through'];
+		$alias_to_table = [call_user_func([$this->model_to, 'table']), $alias_to];
 
-		$models = array(
-			$rel_name.'_through' => array(
+		$models = [
+			$rel_name.'_through' => [
 				'model'        => null,
-				'connection'   => call_user_func(array($this->model_to, 'connection')),
+				'connection'   => call_user_func([$this->model_to, 'connection']),
 				'table'        => $alias_through,
 				'primary_key'  => null,
 				'join_type'    => \Arr::get($conditions, 'join_type') ?: \Arr::get($this->conditions, 'join_type', 'left'),
-				'join_on'      => array(),
+				'join_on'      => [],
 				'columns'      => $this->select_through($alias_to.'_through'),
 				'rel_name'     => $this->model_through,
 				'relation'     => $this,
-			),
-			$rel_name => array(
+			],
+			$rel_name => [
 				'model'        => $this->model_to,
-				'connection'   => call_user_func(array($this->model_to, 'connection')),
+				'connection'   => call_user_func([$this->model_to, 'connection']),
 				'table'        => $alias_to_table,
-				'primary_key'  => call_user_func(array($this->model_to, 'primary_key')),
+				'primary_key'  => call_user_func([$this->model_to, 'primary_key']),
 				'join_type'    => \Arr::get($conditions, 'join_type') ?: \Arr::get($this->conditions, 'join_type', 'left'),
-				'join_on'      => array(),
+				'join_on'      => [],
 				'columns'      => $this->select($alias_to),
-				'rel_name'     => strpos($rel_name, '.') ? substr($rel_name, strrpos($rel_name, '.') + 1) : $rel_name,
+				'rel_name'     => strpos((string) $rel_name, '.') ? substr((string) $rel_name, strrpos((string) $rel_name, '.') + 1) : $rel_name,
 				'relation'     => $this,
-				'where'        => \Arr::get($conditions, 'where', array()),
-			),
-		);
+				'where'        => \Arr::get($conditions, 'where', []),
+			],
+		];
 
 		reset($this->key_from);
 		foreach ($this->key_through_from as $key)
 		{
-			$models[$rel_name.'_through']['join_on'][] = array($alias_from.'.'.current($this->key_from), '=', $alias_to.'_through.'.$key);
+			$models[$rel_name.'_through']['join_on'][] = [$alias_from.'.'.current($this->key_from), '=', $alias_to.'_through.'.$key];
 			next($this->key_from);
 		}
 
 		reset($this->key_to);
 		foreach ($this->key_through_to as $key)
 		{
-			$models[$rel_name]['join_on'][] = array($alias_to.'_through.'.$key, '=', $alias_to.'.'.current($this->key_to));
+			$models[$rel_name]['join_on'][] = [$alias_to.'_through.'.$key, '=', $alias_to.'.'.current($this->key_to)];
 			next($this->key_to);
 		}
 
-		foreach (array(\Arr::get($this->conditions, 'where', array()), \Arr::get($conditions, 'join_on', array())) as $c)
+		foreach ([\Arr::get($this->conditions, 'where', []), \Arr::get($conditions, 'join_on', [])] as $c)
 		{
 			foreach ($c as $key => $condition)
 			{
-				! is_array($condition) and $condition = array($key, '=', $condition);
-				if ( ! $condition[0] instanceof \Fuel\Core\Database_Expression and strpos($condition[0], '.') === false)
+				! is_array($condition) and $condition = [$key, '=', $condition];
+				if ( ! $condition[0] instanceof \Fuel\Core\Database_Expression and !str_contains((string) $condition[0], '.'))
 				{
 					$condition[0] = $alias_to.'.'.$condition[0];
 				}
 				if (count($condition) == 2) // From Query::_where()
 				{
-					$condition = array($condition[0], '=', $condition[1]);
+					$condition = [$condition[0], '=', $condition[1]];
 				}
 				is_string($condition[2]) and $condition[2] = \Db::quote($condition[2], $models[$rel_name]['connection']);
 
@@ -220,16 +223,16 @@ class ManyMany extends Relation
 			}
 		}
 
-		$order_by = \Arr::get($conditions, 'order_by') ?: \Arr::get($this->conditions, 'order_by', array());
+		$order_by = \Arr::get($conditions, 'order_by') ?: \Arr::get($this->conditions, 'order_by', []);
 		foreach ($order_by as $key => $direction)
 		{
-			if ( ! $key instanceof \Fuel\Core\Database_Expression and strpos($key, '.') === false)
+			if ( ! $key instanceof \Fuel\Core\Database_Expression and !str_contains($key, '.'))
 			{
 				$key = $alias_to.'.'.$key;
 			}
 			else
 			{
-				$key = str_replace(array($alias_through[0], $alias_to_table[0]), array($alias_through[1], $alias_to_table[1]), $key);
+				$key = str_replace([$alias_through[0], $alias_to_table[0]], [$alias_through[1], $alias_to_table[1]], $key);
 			}
 			$models[$rel_name]['order_by'][$key] = $direction;
 		}
@@ -237,19 +240,19 @@ class ManyMany extends Relation
 		return $models;
 	}
 
-	public function save($model_from, $models_to, $original_model_ids, $parent_saved, $cascade)
+	public function save($model_from, $models_to, $original_model_ids, $parent_saved, $cascade): void
 	{
 		if ( ! $parent_saved)
 		{
 			return;
 		}
 
-		if ( ! is_array($models_to) and ($models_to = is_null($models_to) ? array() : $models_to) !== array())
+		if ( ! is_array($models_to) and ($models_to = is_null($models_to) ? [] : $models_to) !== [])
 		{
 			throw new \FuelException('Assigned relationships must be an array or null, given relationship value for '.
 				$this->name.' is invalid.');
 		}
-		$original_model_ids === null and $original_model_ids = array();
+		$original_model_ids === null and $original_model_ids = [];
 		$del_rels = $original_model_ids;
 
 		foreach ($models_to as $key => $model_to)
@@ -270,7 +273,7 @@ class ManyMany extends Relation
 			// Check if the model was already assigned, if not INSERT relationships:
 			if ( ! in_array($current_model_id, $original_model_ids))
 			{
-				$ids = array();
+				$ids = [];
 				reset($this->key_from);
 				foreach ($this->key_through_from as $pk)
 				{
@@ -285,7 +288,7 @@ class ManyMany extends Relation
 					next($this->key_to);
 				}
 
-				\DB::insert($this->table_through)->set($ids)->execute(call_user_func(array($model_from, 'connection'), true));
+				\DB::insert($this->table_through)->set($ids)->execute(call_user_func($model_from->connection(...), true));
 				$original_model_ids[] = $current_model_id; // prevents inserting it a second time
 			}
 			else
@@ -321,7 +324,7 @@ class ManyMany extends Relation
 				next($this->key_from);
 			}
 
-			$to_keys = count($this->key_to) == 1 ? array($original_model_id) : explode('][', substr($original_model_id, 1, -1));
+			$to_keys = count($this->key_to) == 1 ? [$original_model_id] : explode('][', substr((string) $original_model_id, 1, -1));
 			reset($to_keys);
 			foreach ($this->key_through_to as $key)
 			{
@@ -329,7 +332,7 @@ class ManyMany extends Relation
 				next($to_keys);
 			}
 
-			$query->execute(call_user_func(array($model_from, 'connection'), true));
+			$query->execute(call_user_func($model_from->connection(...), true));
 		}
 
 		$cascade = is_null($cascade) ? $this->cascade_save : (bool) $cascade;
@@ -342,7 +345,7 @@ class ManyMany extends Relation
 		}
 	}
 
-	public function delete($model_from, $models_to, $parent_deleted, $cascade)
+	public function delete($model_from, $models_to, $parent_deleted, $cascade): void
 	{
 		if ( ! $parent_deleted)
 		{
@@ -352,7 +355,7 @@ class ManyMany extends Relation
 		// Remove relations
 		$model_from->unfreeze();
 		$rels = $model_from->_relate();
-		$rels[$this->name] = array();
+		$rels[$this->name] = [];
 		$model_from->_relate($rels);
 		$model_from->freeze();
 
@@ -369,7 +372,7 @@ class ManyMany extends Relation
 		}
 	}
 
-	public function delete_related($model_from)
+	public function delete_related($model_from): void
 	{
 		// Delete all relationship entries for the model_from
 		$query = \DB::delete($this->table_through);
@@ -379,6 +382,6 @@ class ManyMany extends Relation
 			$query->where($key, '=', $model_from->{current($this->key_from)});
 			next($this->key_from);
 		}
-		$query->execute(call_user_func(array($model_from, 'connection'), true));
+		$query->execute(call_user_func([$model_from, 'connection'], true));
 	}
 }

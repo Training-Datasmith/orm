@@ -51,10 +51,10 @@ class Observer_UpdatedAt extends Observer
 	 */
 	public function __construct($class)
 	{
-		$props = $class::observers(get_class($this));
-		$this->_mysql_timestamp  = isset($props['mysql_timestamp']) ? $props['mysql_timestamp'] : static::$mysql_timestamp;
-		$this->_property         = isset($props['property']) ? $props['property'] : static::$property;
-		$this->_relations        = isset($props['relations']) ? $props['relations'] : array();
+		$props = $class::observers(static::class);
+		$this->_mysql_timestamp  = $props['mysql_timestamp'] ?? static::$mysql_timestamp;
+		$this->_property         = $props['property'] ?? static::$property;
+		$this->_relations        = $props['relations'] ?? [];
 	}
 
 	/**
@@ -62,7 +62,7 @@ class Observer_UpdatedAt extends Observer
 	 *
 	 * @param  Model  Model object subject of this observer method
 	 */
-	public function before_save(Model $obj)
+	public function before_save(Model $obj): void
 	{
 		$this->before_update($obj);
 	}
@@ -72,7 +72,7 @@ class Observer_UpdatedAt extends Observer
 	 *
 	 * @param  Model  Model object subject of this observer method
 	 */
-	public function before_update(Model $obj)
+	public function before_update(Model $obj): void
 	{
 		// If there are any relations loop through and check if any of them have been changed
 		$relation_changed = false;
@@ -85,7 +85,7 @@ class Observer_UpdatedAt extends Observer
 			}
 		}
 
-		$objClassName = get_class($obj);
+		$objClassName = $obj::class;
 		$objProperties = $objClassName::properties();
 
 		if ($obj->is_changed(array_keys($objProperties)) or $relation_changed)
@@ -95,15 +95,13 @@ class Observer_UpdatedAt extends Observer
 	}
 
 	/**
-	 * Checks to see if any models in the given relation are changed. This function is lazy so will return true as soon
-	 * as it finds something that has changed.
-	 *
-	 * @param Model  $obj
-	 * @param string $relation
-	 *
-	 * @return bool
-	 */
-	protected function relation_changed(Model $obj, $relation)
+     * Checks to see if any models in the given relation are changed. This function is lazy so will return true as soon
+     * as it finds something that has changed.
+     *
+     *
+     * @return bool
+     */
+    protected function relation_changed(Model $obj, string $relation)
 	{
 		// Check that the relation exists
 		if ($obj->relations($relation) === false)

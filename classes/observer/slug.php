@@ -75,10 +75,10 @@ class Observer_Slug extends Observer
 	 */
 	public function __construct($class)
 	{
-		$props = $class::observers(get_class($this));
-		$this->_source    = isset($props['source']) ? $props['source'] : static::$source;
-		$this->_property  = isset($props['property']) ? $props['property'] : static::$property;
-		$this->_separator = isset($props['separator']) ? $props['separator'] : static::$separator;
+		$props = $class::observers(static::class);
+		$this->_source    = $props['source'] ?? static::$source;
+		$this->_property  = $props['property'] ?? static::$property;
+		$this->_separator = $props['separator'] ?? static::$separator;
 		$this->_unique    = isset($props['unique']) ? (bool) $props['unique'] : static::$unique;
 		$this->_overwrite = isset($props['overwrite']) ? (bool) $props['overwrite'] : static::$overwrite;
 	}
@@ -88,7 +88,7 @@ class Observer_Slug extends Observer
 	 *
 	 * @param  Model  Model object subject of this observer method
 	 */
-	public function before_insert(Model $obj)
+	public function before_insert(Model $obj): void
 	{
 		// slug should be overwritten if it is enabled to be or there is no manually assigned value
 		$overwrite = $this->_overwrite === true || empty($obj->{$this->_property});
@@ -97,7 +97,7 @@ class Observer_Slug extends Observer
 		// is this a soft model?
 		if ($obj instanceof Model_Soft)
 		{
-			$class = get_class($obj);
+			$class = $obj::class;
 
 			$class::disable_filter();
 		}
@@ -133,7 +133,7 @@ class Observer_Slug extends Observer
 			if ($obj instanceof Model_Temporal)
 			{
 				// add a filter to only check current revisions excluding the current object
-				$class = get_class($obj);
+				$class = $obj::class;
 				$query->where($class::temporal_property('end_column'), '=', $class::temporal_property('max_timestamp'));
 				foreach($class::getNonTimestampPks() as $key)
 				{
@@ -162,7 +162,7 @@ class Observer_Slug extends Observer
 
 				foreach ($same as $record)
 				{
-					if (preg_match('/^'.$slug.'(?:-([0-9]+))?$/', $record->{$this->_property}, $matches))
+					if (preg_match('/^'.$slug.'(?:-([0-9]+))?$/', (string) $record->{$this->_property}, $matches))
 					{
 						$index = isset($matches[1]) ? (int) $matches[1] : 0;
 						$max < $index and $max = $index;
@@ -181,7 +181,7 @@ class Observer_Slug extends Observer
 	 *
 	 * @param  Model  Model object subject of this observer method
 	 */
-	public function before_update(Model $obj)
+	public function before_update(Model $obj): void
 	{
 		// determine the slug
 		$properties = (array) $this->_source;

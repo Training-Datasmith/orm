@@ -23,7 +23,7 @@ class Query_Soft extends Query
 	/**
 	 * @var null|string Name of the filter column or null for no filtering
 	 */
-	protected $_col_name = null;
+	protected $_col_name;
 
 	/**
 	 * Enables filtering by setting the column name to filter on.
@@ -32,7 +32,7 @@ class Query_Soft extends Query
 	 *
 	 * @return $this
 	 */
-	public function set_soft_filter($col_name)
+	public function set_soft_filter($col_name): static
 	{
 		$this->_col_name = $col_name;
 		return $this;
@@ -76,10 +76,10 @@ class Query_Soft extends Query
 
 	protected function modify_join_result($join_result, $name)
 	{
-		if ( ! is_null($this->_col_name) and is_subclass_of($join_result[$name]['model'], '\Orm\Model_Soft'))
+		if ( ! is_null($this->_col_name) and is_subclass_of($join_result[$name]['model'], \Orm\Model_Soft::class))
 		{
 			$table = $join_result[$name]['table'][1];
-			$join_result[$name]['join_on'][] = array("$table.$this->_col_name", 'IS', \DB::expr('NULL'));
+			$join_result[$name]['join_on'][] = ["$table.$this->_col_name", 'IS', \DB::expr('NULL')];
 		}
 
 		return parent::modify_join_result($join_result, $name);
@@ -98,7 +98,7 @@ class Query_Soft extends Query
 			// If there is no filtering then we don't need to add any special organization
 			if ( ! empty($current_where))
 			{
-				$this->where = array();
+				$this->where = [];
 
 				// Make sure the existing filtering is wrapped safely
 				$this->and_where_open();

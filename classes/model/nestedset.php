@@ -28,18 +28,18 @@ class Model_Nestedset extends Model
 	/**
 	 * @var  array  cached tree configurations
 	 */
-	protected static $_tree_cached = array();
+	protected static $_tree_cached = [];
 
 	/*
 	 * @var  array  nestedset tree configuration defaults
 	 */
-	protected static $_defaults = array(
+	protected static $_defaults = [
 		'left_field'     => 'left_id',		// name of the tree node left index field
 		'right_field'    => 'right_id',		// name of the tree node right index field
 		'tree_field'     => null,			// name of the tree node tree index field
 		'title_field'    => null,			// value of the tree node title field
-		'read-only'      => array(),		// list of properties to protect against direct updates
-	);
+		'read-only'      => [],		// list of properties to protect against direct updates
+	];
 
 	// -------------------------------------------------------------------------
 	// tree configuration
@@ -53,7 +53,7 @@ class Model_Nestedset extends Model
 	 */
 	public static function tree_config($name = null)
 	{
-		$class = get_called_class();
+		$class = static::class;
 
 		// configuration not loaded yet
 		if ( ! array_key_exists($class, static::$_tree_cached))
@@ -69,7 +69,7 @@ class Model_Nestedset extends Model
 			}
 
 			// array of read-only column names, the can not be set manually
-			foreach(array('left_field', 'right_field', 'tree_field') as $field)
+			foreach(['left_field', 'right_field', 'tree_field'] as $field)
 			{
 				$column = static::tree_config($field) and static::$_tree_cached[$class]['read-only'][] = $column;
 			}
@@ -79,10 +79,7 @@ class Model_Nestedset extends Model
 		{
 			return static::$_tree_cached[$class];
 		}
-		else
-		{
-			return array_key_exists($name, static::$_tree_cached[$class]) ? static::$_tree_cached[$class][$name] :  null;
-		}
+        return array_key_exists($name, static::$_tree_cached[$class]) ? static::$_tree_cached[$class][$name] :  null;
 	}
 
 	// -------------------------------------------------------------------------
@@ -92,12 +89,12 @@ class Model_Nestedset extends Model
 	/**
 	 * @var  array  store the node operation we need to execute on save() or get()
 	 */
-	protected $_node_operation = array();
+	protected $_node_operation = [];
 
 	/**
 	 * @var  mixed  id value of the current tree in multi-tree models
 	 */
-	protected $_current_tree_id = null;
+	protected $_current_tree_id;
 
 	/*
 	 * Initialize the nestedset model instance
@@ -109,7 +106,7 @@ class Model_Nestedset extends Model
 	 *
 	 * @throws  OutOfBoundsException  if the model has a compound primary key defined
 	 */
-	public function __construct(array $data = array(), $new = true, $view = null, $cache = true)
+	public function __construct(array $data = [], $new = true, $view = null, $cache = true)
 	{
 		// check for a compound key, we don't do that (yet)
 		if (count(static::$_primary_key) > 1)
@@ -133,7 +130,7 @@ class Model_Nestedset extends Model
 	 *
 	 * @throws  BadMethodCallException  if the model is not multi-tree
 	 */
-	public function set_tree_id($tree = null)
+	public function set_tree_id($tree = null): static
 	{
 		// is this a multi-tree model?
 		if (static::tree_config('tree_field') === null)
@@ -220,14 +217,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function root()
+	public function root(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => true,
 			'action' => 'root',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -240,14 +237,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function roots()
+	public function roots(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => false,
 			'action' => 'roots',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -260,14 +257,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function parent()
+	public function parent(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => true,
 			'action' => 'parent',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -280,14 +277,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function children()
+	public function children(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => false,
 			'action' => 'children',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -300,14 +297,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function ancestors()
+	public function ancestors(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => false,
 			'action' => 'ancestors',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -320,14 +317,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function descendants()
+	public function descendants(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => false,
 			'action' => 'descendants',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -340,14 +337,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function leaf_descendants()
+	public function leaf_descendants(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => false,
 			'action' => 'leaf_descendants',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -360,14 +357,14 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function siblings()
+	public function siblings(): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => false,
 			'action' => 'siblings',
 			'to' => null,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -380,15 +377,15 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function path($addroot = true)
+	public function path($addroot = true): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => false,
 			'action' => 'path',
 			'to' => null,
 			'addroot' => $addroot,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -417,14 +414,14 @@ class Model_Nestedset extends Model
 	 * @param   Model_Nestedset, or PK of the parent object, or null
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function first_child($to = null)
+	public function first_child($to = null): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => true,
 			'action' => 'first_child',
 			'to' => $to,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -438,14 +435,14 @@ class Model_Nestedset extends Model
 	 * @param   Model_Nestedset, or PK of the parent object, or null
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function last_child($to = null)
+	public function last_child($to = null): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => true,
 			'action' => 'last_child',
 			'to' => $to,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -472,14 +469,14 @@ class Model_Nestedset extends Model
 	 * @param   Model_Nestedset, or PK of the parent object, or null
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function previous_sibling($to = null)
+	public function previous_sibling($to = null): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => true,
 			'action' => 'previous_sibling',
 			'to' => $to,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
@@ -493,66 +490,55 @@ class Model_Nestedset extends Model
 	 * @param   Model_Nestedset, or PK of the parent object, or null
 	 * @return  Model_Nestedset  this object, for chaining
 	 */
-	public function next_sibling($to = null)
+	public function next_sibling($to = null): static
 	{
-		$this->_node_operation = array(
-			'related' => array(),
+		$this->_node_operation = [
+			'related' => [],
 			'single' => true,
 			'action' => 'next_sibling',
 			'to' => $to,
-		);
+		];
 
 		// return the object for chaining
 		return $this;
 	}
 
 	// -------------------------------------------------------------------------
-	// boolean tree functions
-	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is a tree root
-	 *
-	 * @return  bool
-	 */
-	public function is_root()
+    // boolean tree functions
+    // -------------------------------------------------------------------------
+    /**
+     * Check if the object is a tree root
+     */
+    public function is_root(): bool
 	{
 		return $this->{static::tree_config('left_field')} == 1;
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is a tree leaf (node with no children)
-	 *
-	 * @return  bool
-	 */
-	public function is_leaf()
+    /**
+     * Check if the object is a tree leaf (node with no children)
+     */
+    public function is_leaf(): bool
 	{
 		return $this->{static::tree_config('right_field')} - $this->{static::tree_config('left_field')} == 1;
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is a child node (not a root node)
-	 *
-	 * @return  bool
-	 */
-	public function is_child()
+    /**
+     * Check if the object is a child node (not a root node)
+     */
+    public function is_child(): bool
 	{
-		return ! $this->is_root($this);
+		return ! $this->is_root();
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is a child of node
-	 *
-	 * @param   Model_Nestedset of the parent to check
-	 * @return  bool
-	 */
-	public function is_child_of(Model_Nestedset $parent)
+    /**
+     * Check if the object is a child of node
+     *
+     * @param   Model_Nestedset of the parent to check
+     */
+    public function is_child_of(Model_Nestedset $parent): bool
 	{
 		// get our parent
 		$our_parent = $this->parent()->get_one();
@@ -562,14 +548,12 @@ class Model_Nestedset extends Model
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is a direct descendant of node
-	 *
-	 * @param   Model_Nestedset of the parent to check
-	 * @return  bool
-	 */
-	public function is_descendant_of(Model_Nestedset $parent)
+    /**
+     * Check if the object is a direct descendant of node
+     *
+     * @param   Model_Nestedset of the parent to check
+     */
+    public function is_descendant_of(Model_Nestedset $parent): bool
 	{
 		// get params to avoid excessive method calls
 		$left_field = static::tree_config('left_field');
@@ -580,27 +564,23 @@ class Model_Nestedset extends Model
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is the parent of node
-	 *
-	 * @param   Model_Nestedset of the child to check
-	 * @return  bool
-	 */
-	public function is_parent_of(Model_Nestedset $child)
+    /**
+     * Check if the object is the parent of node
+     *
+     * @param   Model_Nestedset of the child to check
+     */
+    public function is_parent_of(Model_Nestedset $child): bool
 	{
 		return $this == $child->parent()->get_one();
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is the ancestor of node
-	 *
-	 * @param   Model_Nestedset of the child to check
-	 * @return  bool
-	 */
-	public function is_ancestor_of(Model_Nestedset $child)
+    /**
+     * Check if the object is the ancestor of node
+     *
+     * @param   Model_Nestedset of the child to check
+     */
+    public function is_ancestor_of(Model_Nestedset $child): bool
 	{
 		// get params to avoid excessive method calls
 		$left_field = static::tree_config('left_field');
@@ -611,27 +591,23 @@ class Model_Nestedset extends Model
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is the same model
-	 *
-	 * @param   Model_Nestedset object to verify against
-	 * @return  bool
-	 */
-	public function is_same_model_as(Model_Nestedset $object)
+    /**
+     * Check if the object is the same model
+     *
+     * @param   Model_Nestedset object to verify against
+     */
+    public function is_same_model_as(Model_Nestedset $object): bool
 	{
-		return (get_class($object) == get_class($this));
+		return ($object::class == static::class);
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object is the same model and the same tree
-	 *
-	 * @param   Model_Nestedset object to verify against
-	 * @return  bool
-	 */
-	public function is_same_tree_as(Model_Nestedset $object)
+    /**
+     * Check if the object is the same model and the same tree
+     *
+     * @param   Model_Nestedset object to verify against
+     */
+    public function is_same_tree_as(Model_Nestedset $object): bool
 	{
 		// make sure they're the same model
 		if ($this->is_same_model_as($object))
@@ -661,41 +637,32 @@ class Model_Nestedset extends Model
 	 */
 	public function has_parent()
 	{
-		return $this->is_child($this);
+		return $this->is_child();
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object has children
-	 *
-	 * @return  bool
-	 */
-	public function has_children()
+    /**
+     * Check if the object has children
+     */
+    public function has_children(): bool
 	{
-		return $this->is_leaf($this) ? false : true;
+		return $this->is_leaf() ? false : true;
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object has a previous sibling
-	 *
-	 * @return  bool
-	 */
-	public function has_previous_sibling()
+    /**
+     * Check if the object has a previous sibling
+     */
+    public function has_previous_sibling(): bool
 	{
 		return ! is_null($this->previous_sibling()->get_one());
 	}
 
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Check if the object has a next sibling
-	 *
-	 * @return  bool
-	 */
-	public function has_next_sibling()
+    /**
+     * Check if the object has a next sibling
+     */
+    public function has_next_sibling(): bool
 	{
 		return ! is_null($this->next_sibling()->get_one());
 	}
@@ -709,7 +676,7 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  mixed  integer, or false in case no valid object was passed
 	 */
-	public function count_children()
+	public function count_children(): int
 	{
 		$result = $this->children()->get();
 		return $result ? count($result) : 0;
@@ -722,7 +689,7 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  mixed  integer, or false in case no valid object was passed
 	 */
-	public function count_descendants()
+	public function count_descendants(): int|float
 	{
 		return ($this->{static::tree_config('right_field')} - $this->{static::tree_config('left_field')} - 1) / 2;
 	}
@@ -745,16 +712,12 @@ class Model_Nestedset extends Model
 		{
 			return false;
 		}
-		else
-		{
-			// if we have a valid object, run the query to calculate the depth
-			$query = $this->build_query(false)
+        // if we have a valid object, run the query to calculate the depth
+        $query = $this->build_query(false)
 				->where($left_field, '<', $this->{$left_field})
 				->where($right_field, '>', $this->{$right_field});
-
-			// return the result count
-			return $query->count();
-		}
+        // return the result count
+        return $query->count();
 	}
 
 	// -------------------------------------------------------------------------
@@ -781,13 +744,13 @@ class Model_Nestedset extends Model
 		// storage for the result, start with the current node
 		if ($as_object)
 		{
-			$this->_custom_data[$children] = array();
-			$tree = array($this->{$pk} => $this);
+			$this->_custom_data[$children] = [];
+			$tree = [$this->{$pk} => $this];
 		}
 		else
 		{
-			$this[$children] = array();
-			$tree = array($this->{$pk} => $this->to_array(true));
+			$this[$children] = [];
+			$tree = [$this->{$pk} => $this->to_array(true)];
 		}
 
 		if ( ! empty($title_field) and isset($this->{$title_field}))
@@ -805,7 +768,7 @@ class Model_Nestedset extends Model
 		}
 
 		// parent tracker
-		$tracker = array();
+		$tracker = [];
 		$index = 0;
 		$tracker[$index] =& $tree[$this->{$pk}];
 
@@ -816,12 +779,12 @@ class Model_Nestedset extends Model
 			if ($as_object)
 			{
 				$node = $treenode;
-				$node->_custom_data[$children] = array();
+				$node->_custom_data[$children] = [];
 			}
 			else
 			{
 				$node = $treenode->to_array(true);
-				$node[$children] = array();
+				$node[$children] = [];
 			}
 
 			// is this node a child of the current parent?
@@ -836,13 +799,13 @@ class Model_Nestedset extends Model
 			{
 				if ($as_object)
 				{
-					$node->_custom_data[$path] = rtrim($tracker[$index][$path], '/').'/'.$node->{$title_field};
-					$pathuri and $node->_custom_data['path_'.$pathuri] = rtrim($tracker[$index]['path_'.$pathuri], '/').'/'.$node->{$pathuri};
+					$node->_custom_data[$path] = rtrim((string) $tracker[$index][$path], '/').'/'.$node->{$title_field};
+					$pathuri and $node->_custom_data['path_'.$pathuri] = rtrim((string) $tracker[$index]['path_'.$pathuri], '/').'/'.$node->{$pathuri};
 				}
 				else
 				{
-					$node[$path] = rtrim($tracker[$index][$path], '/').'/'.$node[$title_field];
-					$pathuri and $node['path_'.$pathuri] = rtrim($tracker[$index]['path_'.$pathuri], '/').'/'.$node[$pathuri];
+					$node[$path] = rtrim((string) $tracker[$index][$path], '/').'/'.$node[$title_field];
+					$pathuri and $node['path_'.$pathuri] = rtrim((string) $tracker[$index]['path_'.$pathuri], '/').'/'.$node[$pathuri];
 				}
 			}
 
@@ -1004,7 +967,6 @@ class Model_Nestedset extends Model
 
 						default:
 							throw new \OutOfBoundsException('You can not define a '.$this->_node_operation['action'].'() action before a save().');
-						break;
 					}
 				}
 				catch (\Exception $e)
@@ -1062,7 +1024,7 @@ class Model_Nestedset extends Model
 		else
 		{
 			// get the classname of this model
-			$class = get_called_class();
+			$class = static::class;
 
 			// readonly fields may not be changed
 			foreach (static::$_tree_cached[$class]['read-only'] as $column)
@@ -1103,28 +1065,13 @@ class Model_Nestedset extends Model
 				}
 				try
 				{
-					switch ($this->_node_operation['action'])
-					{
-						case 'next_sibling':
-							$this->_move_subtree($this->_node_operation['to']->{static::tree_config('right_field')} + 1);
-						break;
-
-						case 'previous_sibling':
-							$this->_move_subtree($this->_node_operation['to']->{static::tree_config('left_field')});
-						break;
-
-						case 'first_child':
-							$this->_move_subtree($this->_node_operation['to']->{static::tree_config('left_field')} + 1);
-						break;
-
-						case 'last_child':
-							$this->_move_subtree($this->_node_operation['to']->{static::tree_config('right_field')});
-						break;
-
-						default:
-							throw new \OutOfBoundsException('You can not define a '.$this->_node_operation['action'].'() action before a save().');
-						break;
-					}
+					match ($this->_node_operation['action']) {
+                        'next_sibling' => $this->_move_subtree($this->_node_operation['to']->{static::tree_config('right_field')} + 1),
+                        'previous_sibling' => $this->_move_subtree($this->_node_operation['to']->{static::tree_config('left_field')}),
+                        'first_child' => $this->_move_subtree($this->_node_operation['to']->{static::tree_config('left_field')} + 1),
+                        'last_child' => $this->_move_subtree($this->_node_operation['to']->{static::tree_config('right_field')}),
+                        default => throw new \OutOfBoundsException('You can not define a '.$this->_node_operation['action'].'() action before a save().'),
+                    };
 				}
 				catch (\Exception $e)
 				{
@@ -1135,7 +1082,7 @@ class Model_Nestedset extends Model
 		}
 
 		// reset the node operation store to make sure nothings pending...
-		$this->_node_operation = array();
+		$this->_node_operation = [];
 
 		// save the current node and return the result
 		return parent::save($cascade, $use_transaction);
@@ -1193,7 +1140,7 @@ class Model_Nestedset extends Model
 		}
 
 		// reset the node operation store to make sure nothings pending...
-		$this->_node_operation = array();
+		$this->_node_operation = [];
 
 		// and return the result
 		return $result;
@@ -1261,7 +1208,7 @@ class Model_Nestedset extends Model
 		}
 
 		// reset the node operation store to make sure nothings pending...
-		$this->_node_operation = array();
+		$this->_node_operation = [];
 
 		// and return the result
 		return $result;
@@ -1284,12 +1231,12 @@ class Model_Nestedset extends Model
 		if (empty($this->_node_operation))
 		{
 			// assume a get-all operation
-			$this->_node_operation = array(
-				'related' => array(),
+			$this->_node_operation = [
+				'related' => [],
 				'single' => false,
 				'action' => 'all',
 				'to' => null,
-			);
+			];
 		}
 
 		return $this->_fetch_nodes('query');
@@ -1306,7 +1253,7 @@ class Model_Nestedset extends Model
 	 * @returns  mixed
 	 * @throws  BadMethodCallException if called without a parameter and without a node to fetch
 	 */
-	public function & get($query = null, array $conditions = array())
+	public function & get($query = null, array $conditions = [])
 	{
 		// do we have any parameters passed?
 		if (func_num_args())
@@ -1317,23 +1264,20 @@ class Model_Nestedset extends Model
 				// run a get() on the query
 				return $query->get();
 			}
-			else
-			{
-				// assume it's a model getter call
-				return parent::get($query, $conditions);
-			}
+            // assume it's a model getter call
+            return parent::get($query, $conditions);
 		}
 
 		// make sure there's a node operation defined
 		if (empty($this->_node_operation))
 		{
 			// assume a get-all operation
-			$this->_node_operation = array(
-				'related' => array(),
+			$this->_node_operation = [
+				'related' => [],
 				'single' => false,
 				'action' => 'all',
 				'to' => null,
-			);
+			];
 		}
 
 		// no parameters, so we need to fetch something
@@ -1364,12 +1308,12 @@ class Model_Nestedset extends Model
 		if (empty($this->_node_operation))
 		{
 			// assume a get-all operation
-			$this->_node_operation = array(
-				'related' => array(),
+			$this->_node_operation = [
+				'related' => [],
 				'single' => true,
 				'action' => 'all',
 				'to' => null,
-			);
+			];
 		}
 
 		// so we need to fetch something
@@ -1384,18 +1328,18 @@ class Model_Nestedset extends Model
 	 *
 	 * @return  $this
 	 */
-	public function related($relation, $conditions = array())
+	public function related($relation, $conditions = []): static
 	{
 		// make sure there's a node operation defined
 		if (empty($this->_node_operation))
 		{
 			// assume a get-all operation
-			$this->_node_operation = array(
-				'related' => array(),
+			$this->_node_operation = [
+				'related' => [],
 				'single' => false,
 				'action' => 'all',
 				'to' => null,
-			);
+			];
 		}
 
 		// store the relation to include
@@ -1417,11 +1361,11 @@ class Model_Nestedset extends Model
 	 *
 	 * @throws  OutOfBoundsException  in case the two objects are not part of the same model
 	 */
-	protected function _same_model_as($object, $method = 'unknown')
+	protected function _same_model_as($object, string $method = 'unknown')
 	{
 		if ( ! $this->is_same_model_as($object))
 		{
-			throw new \OutOfBoundsException('Model object passed to '.$method.'() is not an instance of '.get_class($this).'.');
+			throw new \OutOfBoundsException('Model object passed to '.$method.'() is not an instance of '.static::class.'.');
 		}
 	}
 
@@ -1486,8 +1430,8 @@ class Model_Nestedset extends Model
 				if (is_null($tree_field))
 				{
 					$query = \DB::select('child.'.$pk)
-						->from(array(static::table(), 'child'))
-						->join(array(static::table(), 'ancestor'), 'left')
+						->from([static::table(), 'child'])
+						->join([static::table(), 'ancestor'], 'left')
 						->on(\DB::identifier('ancestor.' . $left_field), 'BETWEEN', \DB::expr(($left + 1) . ' AND ' . ($right - 1)))
 						->on(\DB::identifier('child.' . $left_field), 'BETWEEN', \DB::expr(\DB::identifier('ancestor.'.$left_field).' + 1 AND '.\DB::identifier('ancestor.'.$right_field).' - 1'))
 						->where(\DB::identifier('child.' . $left_field), 'BETWEEN', \DB::expr(($left + 1) . ' AND ' . ($right - 1)))
@@ -1496,8 +1440,8 @@ class Model_Nestedset extends Model
 				else
 				{
 					$query = \DB::select('child.'.$pk)
-						->from(array(static::table(), 'child'))
-						->join(array(static::table(), 'ancestor'), 'left')
+						->from([static::table(), 'child'])
+						->join([static::table(), 'ancestor'], 'left')
 						->on(\DB::identifier('ancestor.' . $left_field), 'BETWEEN', \DB::expr(($left + 1) . ' AND ' . ($right - 1) . ' AND '.\DB::identifier('ancestor.'.$tree_field).' = '.\DB::quote($this->get_tree_id())))
 						->on(\DB::identifier('child.' . $left_field), 'BETWEEN', \DB::expr(\DB::identifier('ancestor.'.$left_field).' + 1 AND '.\DB::identifier('ancestor.'.$right_field).' - 1'))
 						->where(\DB::identifier('child.' . $left_field), 'BETWEEN', \DB::expr(($left + 1) . ' AND ' . ($right - 1)))
@@ -1519,7 +1463,7 @@ class Model_Nestedset extends Model
 
 			case 'ancestors':
 				// storage for the result
-				$result = array();
+				$result = [];
 
 				// new objects don't have a parent
 				if ( ! $this->is_new())
@@ -1538,7 +1482,6 @@ class Model_Nestedset extends Model
 
 				// return the result
 				return $result;
-			break;
 
 			case 'descendants':
 				$query = $this->build_query()
@@ -1572,12 +1515,8 @@ class Model_Nestedset extends Model
 					// get the children of that parent
 					return $parent->children()->get();
 				}
-				else
-				{
-					// no siblings
-					return null;
-				}
-			break;
+			// no siblings
+            return null;
 
 			case 'path':
 				// do we have a title field defined?
@@ -1600,35 +1539,26 @@ class Model_Nestedset extends Model
 							$path .= $object->{$title_field}.'/';
 						}
 					}
-					$path .= $this->{$title_field};
 
 					// and return it
-					return $path;
+					return $path . $this->{$title_field};
 				}
-				else
-				{
-					throw new \OutOfBoundsException('You can call path(), the "'.get_class($this).'" model does not define a title field.');
-				}
-			break;
+			throw new \OutOfBoundsException('You can call path(), the "'.$this::class.'" model does not define a title field.');
 
 			default:
 				throw new \OutOfBoundsException('You can not set a '.$this->_node_operation['action'].'() operation on a get() or get_one().');
-			break;
 		}
 
 		// reset the node operation store to make sure nothings pending...
-		$this->_node_operation = array();
+		$this->_node_operation = [];
 
 		if ($action == 'query')
 		{
 			// return the query object for further chaining
 			return $query;
 		}
-		else
-		{
-			// return the query result based on the action type
-			return $action == 'single' ? $query->get_one() : $query->get();
-		}
+        // return the query result based on the action type
+        return $action == 'single' ? $query->get_one() : $query->get();
 	}
 
 	// -------------------------------------------------------------------------
@@ -1662,9 +1592,9 @@ class Model_Nestedset extends Model
 		$sqldelta = ($delta < 0) ? (' - '.abs($delta)) : (' + '.$delta);
 
 		// set clause
-		$query->set(array(
+		$query->set([
 			$left_field => \DB::expr(\DB::quote_identifier($left_field).$sqldelta),
-		));
+		]);
 
 		// update in the correct order to avoid constraint conflicts
 		$query->order_by($left_field, ($delta < 0 ? 'ASC' : 'DESC'));
@@ -1683,9 +1613,9 @@ class Model_Nestedset extends Model
 		$query->where($right_field, '>=', $first);
 
 		// set clause
-		$query->set(array(
+		$query->set([
 			$right_field => \DB::expr(\DB::quote_identifier($right_field).$sqldelta),
-		));
+		]);
 
 		// update in the correct order to avoid constraint conflicts
 		$query->order_by($right_field, ($delta < 0 ? 'ASC' : 'DESC'));
@@ -1694,7 +1624,7 @@ class Model_Nestedset extends Model
 		$query->execute(static::connection(true));
 
 		// update cached objects, we've modified pointers
-		$class = get_called_class();
+		$class = static::class;
 		if (array_key_exists($class, static::$_cached_objects))
 		{
 			foreach (static::$_cached_objects[$class] as $object)
@@ -1766,10 +1696,10 @@ class Model_Nestedset extends Model
 		$sqldelta = ($delta < 0) ? (' - '.abs($delta)) : (' + '.$delta);
 
 		// set clause
-		$query->set(array(
+		$query->set([
 			$left_field => \DB::expr(\DB::quote_identifier($left_field).$sqldelta),
 			$right_field => \DB::expr(\DB::quote_identifier($right_field).$sqldelta),
-		));
+		]);
 
 		// update in the correct order to avoid constraint conflicts
 		$query->order_by($right_field, ($delta < 0 ? 'ASC' : 'DESC'));
@@ -1778,7 +1708,7 @@ class Model_Nestedset extends Model
 		$query->execute(static::connection(true));
 
 		// update cached objects, we've modified pointers
-		$class = get_called_class();
+		$class = static::class;
 		if (array_key_exists($class, static::$_cached_objects))
 		{
 			foreach (static::$_cached_objects[$class] as $object)
@@ -1815,10 +1745,10 @@ class Model_Nestedset extends Model
 	 *
 	 * @param  integer  new left pointer location to move to
 	 */
-	protected function _move_subtree($destination_id)
+	protected function _move_subtree($destination_id): static
 	{
 		// get params to avoid excessive method calls
-		$tree_field = static::tree_config('tree_field');
+		static::tree_config('tree_field');
 		$left_field = static::tree_config('left_field');
 		$right_field = static::tree_config('right_field');
 

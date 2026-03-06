@@ -42,9 +42,9 @@ class Model_Soft extends Model
 	 * Contains cached soft delete properties.
 	 * @var array
 	 */
-	protected static $_soft_delete_cached = array();
+	protected static $_soft_delete_cached = [];
 
-	protected static $_disable_filter = array();
+	protected static $_disable_filter = [];
 
 	protected $_disable_soft_delete = false;
 
@@ -56,7 +56,7 @@ class Model_Soft extends Model
 	 */
 	public static function soft_delete_properties()
 	{
-		$class = get_called_class();
+		$class = static::class;
 
 		// If already determined
 		if (array_key_exists($class, static::$_soft_delete_cached))
@@ -64,7 +64,7 @@ class Model_Soft extends Model
 			return static::$_soft_delete_cached[$class];
 		}
 
-		$properties = array();
+		$properties = [];
 
 		// Try to grab the properties from the class...
 		if (property_exists($class, '_soft_delete'))
@@ -82,18 +82,18 @@ class Model_Soft extends Model
 	/**
 	 * Disables filtering of deleted entries.
 	 */
-	public static function disable_filter()
+	public static function disable_filter(): void
 	{
-		$class = get_called_class();
+		$class = static::class;
 		static::$_disable_filter[$class] = false;
 	}
 
 	/**
 	 * Enables filtering of deleted entries.
 	 */
-	public static function enable_filter()
+	public static function enable_filter(): void
 	{
-		$class = get_called_class();
+		$class = static::class;
 		static::$_disable_filter[$class] = true;
 	}
 
@@ -102,7 +102,7 @@ class Model_Soft extends Model
 	 */
 	public static function get_filter_status()
 	{
-		$class = get_called_class();
+		$class = static::class;
 		return \Arr::get(static::$_disable_filter, $class, true);
 	}
 
@@ -117,7 +117,7 @@ class Model_Soft extends Model
 	 */
 	public static function soft_delete_property($key, $default = null)
 	{
-		$class = get_called_class();
+		$class = static::class;
 
 		// If already determined
 		if (! array_key_exists($class, static::$_soft_delete_cached))
@@ -137,12 +137,12 @@ class Model_Soft extends Model
 	 */
 	public static function __callStatic($method, $args)
 	{
-		if (strpos($method, 'find_deleted') === 0)
+		if (str_starts_with($method, 'find_deleted'))
 		{
 			$temp_args = $args;
 
 			$find_type = count($temp_args) > 0 ? array_shift($temp_args) : 'all';
-			$options = count($temp_args) > 0 ? array_shift($temp_args) : array();
+			$options = count($temp_args) > 0 ? array_shift($temp_args) : [];
 
 			return static::deleted($find_type, $options);
 		}
@@ -163,9 +163,8 @@ class Model_Soft extends Model
 
 		// Generate the correct timestamp and save it
 		$this->{$deleted_column} = $mysql_timestamp ? \Date::forge()->format('mysql') : \Date::forge()->get_timestamp();
-		$result = $this->save(false);
 
-		return $result;
+		return $this->save(false);
 	}
 
 	/**
@@ -192,10 +191,10 @@ class Model_Soft extends Model
 	/**
 	 * Returns true unless the related model is not soft or temporal
 	 */
-	protected function should_cascade_delete($rel)
+	protected function should_cascade_delete($rel): bool
 	{
 		// Because temporal includes soft delete functionality it can be deleted too
-		if ( ! is_subclass_of($rel->model_to, 'Orm\Model_Soft') && ! is_subclass_of($rel->model_to, 'Orm\Model_Temporal'))
+		if ( ! is_subclass_of($rel->model_to, \Orm\Model_Soft::class) && ! is_subclass_of($rel->model_to, \Orm\Model_Temporal::class))
 		{
 			// Throw if other is not soft
 			throw new RelationNotSoft('Both sides of the relation must be subclasses of Model_Soft or Model_Temporal if cascade delete is true. '.$rel->model_to.' was found instead.');
@@ -214,7 +213,7 @@ class Model_Soft extends Model
 
 		//Loop through all relations and restore if we are cascading.
 		$this->freeze();
-		foreach ($this->relations() as $rel_name => $rel)
+		foreach ($this->relations() as $rel)
 		{
 			//get the cascade delete status
 			$rel_cascade = is_null($cascade_restore) ? $rel->cascade_delete : (bool) $cascade_restore;
@@ -222,13 +221,13 @@ class Model_Soft extends Model
 			//Make sure that the other model is soft delete too
 			if ($rel_cascade)
 			{
-				if (! is_subclass_of($rel->model_to, 'Orm\Model_Soft'))
+				if (! is_subclass_of($rel->model_to, \Orm\Model_Soft::class))
 				{
 					//Throw if other is not soft
 					throw new RelationNotSoft('Both sides of the relation must be subclasses of Model_Soft if cascade delete is true');
 				}
 
-				if (get_class($rel) != 'Orm\ManyMany')
+				if ($rel::class != \Orm\ManyMany::class)
 				{
 					$model_to = $rel->model_to;
 					$model_to::disable_filter();
@@ -270,9 +269,9 @@ class Model_Soft extends Model
 	/**
 	 * Overrides the query method to allow soft delete items to be filtered out.
 	 */
-	public static function query($options = array())
+	public static function query($options = [])
 	{
-		$query = Query_Soft::forge(get_called_class(), static::connection(), $options);
+		$query = Query_Soft::forge(static::class, static::connection(), $options);
 
 		if (static::get_filter_status())
 		{
@@ -287,11 +286,11 @@ class Model_Soft extends Model
 	 * Alisas of find() but selects only deleted entries rather than non-deleted
 	 * ones.
 	 */
-	public static function deleted($id = null, array $options = array())
+	public static function deleted($id = null, array $options = [])
 	{
 		//Make sure we are not filtering out soft deleted items
 		$deleted_column = static::soft_delete_property('deleted_field', static::$_default_field_name);
-		$options['where'][] = array($deleted_column, 'IS NOT', null);
+		$options['where'][] = [$deleted_column, 'IS NOT', null];
 
 		static::disable_filter();
 		$result = parent::find($id, $options);

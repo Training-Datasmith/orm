@@ -19,16 +19,13 @@ namespace Orm;
 class Observer_Self
 {
 	/**
-	 * Get notified of an event
-	 *
-	 * @param  Model   $instance
-	 * @param  string  $event
-	 */
-	public static function orm_notify(Model $instance, $event)
+     * Get notified of an event
+     */
+    public static function orm_notify(Model $instance, string $event): void
 	{
 		if (method_exists($instance, $method = '_event_'.$event))
 		{
-			call_user_func(array($instance, $method));
+			call_user_func([$instance, $method]);
 		}
 	}
 }

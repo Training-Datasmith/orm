@@ -66,10 +66,10 @@ class Observer_Validation extends Observer
 	 */
 	public static function set_fields($obj, $fieldset = null)
 	{
-		static $_generated = array();
-		static $_tabular_rows = array();
+		static $_generated = [];
+		static $_tabular_rows = [];
 
-		$class = is_object($obj) ? get_class($obj) : $obj;
+		$class = is_object($obj) ? $obj::class : $obj;
 		if (is_null($fieldset))
 		{
 			$fieldset = \Fieldset::instance($class);
@@ -85,7 +85,7 @@ class Observer_Validation extends Observer
 		// don't cache tabular form fieldsets
 		if ( ! $tabular_form)
 		{
-			! array_key_exists($class, $_generated) and $_generated[$class] = array();
+			! array_key_exists($class, $_generated) and $_generated[$class] = [];
 			if (in_array($fieldset, $_generated[$class], true))
 			{
 				return $fieldset;
@@ -113,15 +113,15 @@ class Observer_Validation extends Observer
 			{
 				foreach ($settings['form']['options'] as $key => $value)
 				{
-					is_array($value) or $settings['form']['options'][$key] = \Lang::get($value, array(), false) ?: $value;
+					is_array($value) or $settings['form']['options'][$key] = \Lang::get($value, [], false) ?: $value;
 				}
 			}
 
 			// field attributes can be passed in form key
-			$attributes = isset($settings['form']) ? $settings['form'] : array();
+			$attributes = $settings['form'] ?? [];
 			// label is either set in property setting, as part of form attributes or defaults to fieldname
-			$label = isset($settings['label']) ? $settings['label'] : (isset($attributes['label']) ? $attributes['label'] : $p);
-			$label = \Lang::get($label, array(), false) ?: $label;
+			$label = $settings['label'] ?? $attributes['label'] ?? $p;
+			$label = \Lang::get($label, [], false) ?: $label;
 
 			// change the fieldname and label for tabular form fieldset children
 			if ($tabular_form and $primary_key)
@@ -145,14 +145,14 @@ class Observer_Validation extends Observer
 				{
 					if (is_int($rule) and is_string($args))
 					{
-						$args = array($args);
+						$args = [$args];
 					}
 					else
 					{
 						array_unshift($args, $rule);
 					}
 
-					call_fuel_func_array(array($field, 'add_rule'), $args);
+					call_fuel_func_array([$field, 'add_rule'], $args);
 				}
 			}
 		}
@@ -173,7 +173,7 @@ class Observer_Validation extends Observer
 	 *
 	 * @throws  ValidationFailed
 	 */
-	public function before_save(Model $obj)
+	public function before_save(Model $obj): void
 	{
 		$this->validate($obj);
 	}
@@ -185,7 +185,7 @@ class Observer_Validation extends Observer
 	 *
 	 * @throws  ValidationFailed
 	 */
-	public function before_insert(Model $obj)
+	public function before_insert(Model $obj): void
 	{
 		$this->validate($obj);
 	}
@@ -197,7 +197,7 @@ class Observer_Validation extends Observer
 	 *
 	 * @throws  ValidationFailed
 	 */
-	public function before_update(Model $obj)
+	public function before_update(Model $obj): void
 	{
 		$this->validate($obj);
 	}
@@ -209,7 +209,7 @@ class Observer_Validation extends Observer
 	 *
 	 * @throws  ValidationFailed
 	 */
-	public function validate(Model $obj)
+	public function validate(Model $obj): void
 	{
 		$fieldset = static::set_fields($obj);
 		$val = $fieldset->validation();
@@ -217,9 +217,9 @@ class Observer_Validation extends Observer
 		$is_new = $obj->is_new();
 
 		// only allow partial validation on updates, specify the fields for updates to allow null
-		$allow_partial = $is_new ? false : array();
+		$allow_partial = $is_new ? false : [];
 
-		$input = array();
+		$input = [];
 		foreach (array_keys($obj->properties()) as $p)
 		{
 			if ( ! in_array($p, $obj->primary_key()) and ($is_new or $obj->is_changed($p)))
@@ -229,16 +229,13 @@ class Observer_Validation extends Observer
 			}
 		}
 
-		if ( ! empty($input) and $val->run($input, $allow_partial, array($obj)) === false)
+		if ( ! empty($input) and $val->run($input, $allow_partial, [$obj]) === false)
 		{
 			throw new ValidationFailed($val->show_errors(), 0, null, $fieldset);
 		}
-		else
-		{
-			foreach ($input as $k => $v)
+        foreach ($input as $k => $v)
 			{
 				$obj->{$k} = $val->validated($k);
 			}
-		}
 	}
 }

@@ -32,17 +32,17 @@ abstract class Relation
 	/**
 	 * @var  string  primary key of parent model
 	 */
-	protected $key_from = array('id');
+	protected $key_from = ['id'];
 
 	/**
 	 * @var  string  foreign key in related model
 	 */
-	protected $key_to = array();
+	protected $key_to = [];
 
 	/**
 	 * @var  array  where & order_by conditions for loading this relation
 	 */
-	protected $conditions = array();
+	protected $conditions = [];
 
 	/**
 	 * @var  bool  whether it's a single object or multiple
@@ -83,14 +83,14 @@ abstract class Relation
 	 * @param   string
 	 * @return  array
 	 */
-	public function select($table)
+	public function select(string $table)
 	{
-		$props = call_user_func(array($this->model_to, 'properties'));
+		$props = call_user_func([$this->model_to, 'properties']);
 		$i = 0;
-		$properties = array();
+		$properties = [];
 		foreach ($props as $pk => $pv)
 		{
-			$properties[] = array($table.'.'.$pk, $table.'_c'.$i);
+			$properties[] = [$table.'.'.$pk, $table.'_c'.$i];
 			$i++;
 		}
 
@@ -142,9 +142,9 @@ abstract class Relation
 	 * @throws \FuelException Invalid relation property
 	 * @return
 	 */
-	public function __get($property)
+	public function __get(string $property): mixed
 	{
-		if (strncmp($property, '_', 1) == 0 or ! property_exists($this, $property))
+		if (str_starts_with($property, '_') or ! property_exists($this, $property))
 		{
 			throw new \FuelException('Invalid relation property: '.$property);
 		}

@@ -27,16 +27,16 @@ class Observer_Typing
 	/**
 	 * @var  array  types of events to act on and whether they are pre- or post-database
 	 */
-	public static $events = array(
+	public static $events = [
 		'before_save'  => 'before',
 		'after_save'   => 'after',
 		'after_load'   => 'after',
-	);
+	];
 
 	/**
 	 * @var  array  db type mappings
 	 */
-	public static $type_mappings = array(
+	public static $type_mappings = [
 		'tinyint' => 'int',
 		'smallint' => 'int',
 		'mediumint' => 'int',
@@ -52,64 +52,64 @@ class Observer_Typing
 		'time_mysql' => 'time',
 		'datetime' => 'time',
 		'date' => 'time',
-	);
+	];
 
 	/**
 	 * @var  array  db data types with the method(s) to use, optionally pre- or post-database
 	 */
-	public static $type_methods = array(
-		'varchar' => array(
+	public static $type_methods = [
+		'varchar' => [
 			'before' => 'Orm\\Observer_Typing::type_string',
-		),
-		'int' => array(
+		],
+		'int' => [
 			'before' => 'Orm\\Observer_Typing::type_integer',
 			'after' => 'Orm\\Observer_Typing::type_integer',
-		),
-		'float' => array(
+		],
+		'float' => [
 			'before' => 'Orm\\Observer_Typing::type_float_before',
 			'after' => 'Orm\\Observer_Typing::type_float_after',
-		),
-		'text' => array(
+		],
+		'text' => [
 			'before' => 'Orm\\Observer_Typing::type_string',
-		),
-		'set' => array(
+		],
+		'set' => [
 			'before' => 'Orm\\Observer_Typing::type_set_before',
 			'after' => 'Orm\\Observer_Typing::type_set_after',
-		),
-		'enum' => array(
+		],
+		'enum' => [
 			'before' => 'Orm\\Observer_Typing::type_set_before',
-		),
-		'bool' => array(
+		],
+		'bool' => [
 			'before' => 'Orm\\Observer_Typing::type_bool_to_int',
 			'after'  => 'Orm\\Observer_Typing::type_bool_from_int',
-		),
-		'serialize' => array(
+		],
+		'serialize' => [
 			'before' => 'Orm\\Observer_Typing::type_serialize',
 			'after'  => 'Orm\\Observer_Typing::type_unserialize',
-		),
-		'encrypt' => array(
+		],
+		'encrypt' => [
 			'before' => 'Orm\\Observer_Typing::type_encrypt',
 			'after'  => 'Orm\\Observer_Typing::type_decrypt',
-		),
-		'json' => array(
+		],
+		'json' => [
 			'before' => 'Orm\\Observer_Typing::type_json_encode',
 			'after'  => 'Orm\\Observer_Typing::type_json_decode',
-		),
-		'time' => array(
+		],
+		'time' => [
 			'before' => 'Orm\\Observer_Typing::type_time_encode',
 			'after'  => 'Orm\\Observer_Typing::type_time_decode',
-		),
-	);
+		],
+	];
 
 	/**
 	 * @var  array  regexes for db types with the method(s) to use, optionally pre- or post-database
 	 */
-	public static $regex_methods = array(
-		'/^decimal:([0-9])/uiD' => array(
+	public static $regex_methods = [
+		'/^decimal:([0-9])/uiD' => [
 			'before' => 'Orm\\Observer_Typing::type_decimal_before',
 			'after' => 'Orm\\Observer_Typing::type_decimal_after',
-		),
-	);
+		],
+	];
 
 	/**
 	 */
@@ -118,7 +118,7 @@ class Observer_Typing
 	/**
 	 * Make sure the orm config is loaded
 	 */
-	public static function _init()
+	public static function _init(): void
 	{
 		\Config::load('orm', true);
 
@@ -126,12 +126,11 @@ class Observer_Typing
 	}
 
 	/**
-	 * Get notified of an event
-	 *
-	 * @param  Model   $instance
-	 * @param  string  $event
-	 */
-	public static function orm_notify(Model $instance, $event)
+     * Get notified of an event
+     *
+     * @param  string  $event
+     */
+    public static function orm_notify(Model $instance, $event): void
 	{
 		// if we don't serve this event, bail out immediately
 		if (array_key_exists($event, static::$events))
@@ -167,7 +166,7 @@ class Observer_Typing
 	 *
 	 * @return  mixed
 	 */
-	public static function typecast($column, $value, $settings, $event_type	= 'before')
+	public static function typecast(string $column, $value, $settings, $event_type	= 'before')
 	{
 		 // only on before_save, check if null is allowed
 		if ($value === null)
@@ -217,7 +216,7 @@ class Observer_Typing
 
 					if ($method)
 					{
-						if (preg_match_all($match, $data_type, $matches) > 0)
+						if (preg_match_all($match, (string) $data_type, $matches) > 0)
 						{
 							$value = call_user_func($method, $value, $settings, $matches);
 						}
@@ -233,23 +232,21 @@ class Observer_Typing
 		// if one was found, call it
 		if ($method)
 		{
-			$value = call_user_func($method, $value, $settings);
+			return call_user_func($method, $value, $settings);
 		}
 
 		return $value;
 	}
 
 	/**
-	 * Casts to string when necessary and checks if within max length
-	 *
-	 * @param   mixed  value to typecast
-	 * @param   array  any options to be passed
-	 *
-	 * @throws  InvalidContentType
-	 *
-	 * @return  string
-	 */
-	public static function type_string($var, array $settings)
+     * Casts to string when necessary and checks if within max length
+     *
+     * @param   mixed  value to typecast
+     * @param   array  any options to be passed
+     *
+     * @throws  InvalidContentType
+     */
+    public static function type_string($var, array $settings): string
 	{
 		if (is_array($var) or (is_object($var) and ! method_exists($var, '__toString')))
 		{
@@ -271,16 +268,14 @@ class Observer_Typing
 	}
 
 	/**
-	 * Casts to int when necessary and checks if within max values
-	 *
-	 * @param   mixed  value to typecast
-	 * @param   array  any options to be passed
-	 *
-	 * @throws  InvalidContentType
-	 *
-	 * @return  int
-	 */
-	public static function type_integer($var, array $settings)
+     * Casts to int when necessary and checks if within max values
+     *
+     * @param   mixed  value to typecast
+     * @param   array  any options to be passed
+     *
+     * @throws  InvalidContentType
+     */
+    public static function type_integer($var, array $settings): int
 	{
 		if (is_array($var) or is_object($var))
 		{
@@ -325,7 +320,7 @@ class Observer_Typing
 		{
 			return sprintf('%.'.$settings['db_decimals'].'F', (float) $var);
 		}
-		if (isset($settings['data_type']) and strpos($settings['data_type'], 'decimal:') === 0)
+		if (isset($settings['data_type']) and str_starts_with($settings['data_type'], 'decimal:'))
 		{
 			$decimal = explode(':', $settings['data_type']);
 			return sprintf('%.'.$decimal[1].'F', (float) $var);
@@ -335,15 +330,13 @@ class Observer_Typing
 	}
 
 	/**
-	 * Casts to float when necessary
-	 *
-	 * @param   mixed  value to typecast
-	 *
-	 * @throws  InvalidContentType
-	 *
-	 * @return  float
-	 */
-	public static function type_float_after($var)
+     * Casts to float when necessary
+     *
+     * @param   mixed  value to typecast
+     *
+     * @throws  InvalidContentType
+     */
+    public static function type_float_after($var): float
 	{
 		if (is_array($var) or is_object($var))
 		{
@@ -373,15 +366,13 @@ class Observer_Typing
 	}
 
 	/**
-	 * Decimal post-treater, converts any number to a decimal representation
-	 *
-	 * @param   mixed  value to typecast
-	 *
-	 * @throws  InvalidContentType
-	 *
-	 * @return  float
-	 */
-	public static function type_decimal_after($var, array $settings, array $matches)
+     * Decimal post-treater, converts any number to a decimal representation
+     *
+     * @param   mixed  value to typecast
+     *
+     * @throws  InvalidContentType
+     */
+    public static function type_decimal_after($var, array $settings, array $matches): string
 	{
 		if (is_array($var) or is_object($var))
 		{
@@ -405,16 +396,14 @@ class Observer_Typing
 	}
 
 	/**
-	 * Value pre-treater, deals with array values, and handles the enum type
-	 *
-	 * @param   mixed  value
-	 * @param   array  any options to be passed
-	 *
-	 * @throws  InvalidContentType
-	 *
-	 * @return  string
-	 */
-	public static function type_set_before($var, array $settings)
+     * Value pre-treater, deals with array values, and handles the enum type
+     *
+     * @param   mixed  value
+     * @param   array  any options to be passed
+     *
+     * @throws  InvalidContentType
+     */
+    public static function type_set_before($var, array $settings): string
 	{
 		$var    = is_array($var) ? implode(',', $var) : strval($var);
 		$values = array_filter(explode(',', trim($var)));
@@ -428,7 +417,7 @@ class Observer_Typing
 		{
 			if ( ! in_array($val, $settings['options']))
 			{
-				throw new InvalidContentType('Invalid value given for '.ucfirst($settings['data_type']).
+				throw new InvalidContentType('Invalid value given for '.ucfirst((string) $settings['data_type']).
 					', value "'.$var.'" not in available options: "'.implode(', ', $settings['options']).'".');
 			}
 		}
@@ -437,52 +426,44 @@ class Observer_Typing
 	}
 
 	/**
-	 * Value post-treater, converts a comma-delimited string into an array
-	 *
-	 * @param   mixed  value
-	 *
-	 * @return  array
-	 */
-	public static function type_set_after($var)
+     * Value post-treater, converts a comma-delimited string into an array
+     *
+     * @param   mixed  value
+     */
+    public static function type_set_after($var): array
 	{
-		return explode(',', $var);
+		return explode(',', (string) $var);
 	}
 
 	/**
-	 * Converts boolean input to 1 or 0 for the DB
-	 *
-	 * @param   bool  value
-	 *
-	 * @return  int
-	 */
-	public static function type_bool_to_int($var)
+     * Converts boolean input to 1 or 0 for the DB
+     *
+     * @param   bool  value
+     */
+    public static function type_bool_to_int($var): int
 	{
 		return $var ? 1 : 0;
 	}
 
 	/**
-	 * Converts DB bool values to PHP bool value
-	 *
-	 * @param   bool  value
-	 *
-	 * @return  int
-	 */
-	public static function type_bool_from_int($var)
+     * Converts DB bool values to PHP bool value
+     *
+     * @param   bool  value
+     */
+    public static function type_bool_from_int($var): bool
 	{
 		return $var == '1' ? true : false;
 	}
 
 	/**
-	 * Returns the serialized input
-	 *
-	 * @param   mixed  value
-	 * @param   array  any options to be passed
-	 *
-	 * @throws  InvalidContentType
-	 *
-	 * @return  string
-	 */
-	public static function type_serialize($var, array $settings)
+     * Returns the serialized input
+     *
+     * @param   mixed  value
+     * @param   array  any options to be passed
+     *
+     * @throws  InvalidContentType
+     */
+    public static function type_serialize($var, array $settings): string
 	{
 		$var = serialize($var);
 
@@ -507,7 +488,7 @@ class Observer_Typing
 	 */
 	public static function type_unserialize($var)
 	{
-		return empty($var) ? array() : unserialize($var);
+		return empty($var) ? [] : unserialize($var);
 	}
 
 	/**
@@ -560,14 +541,10 @@ class Observer_Typing
 		// decrypt it
 		if (array_key_exists('encryption_key', $settings))
 		{
-			$var = \Crypt::decode($var, $settings['encryption_key']);
-		}
-		else
-		{
-			$var = \Crypt::decode($var);
+			return \Crypt::decode($var, $settings['encryption_key']);
 		}
 
-		return $var;
+		return \Crypt::decode($var);
 	}
 
 	/**
@@ -597,20 +574,18 @@ class Observer_Typing
 	}
 
 	/**
-	 * Decodes the JSON
-	 *
-	 * @param   string  value
-	 *
-	 * @return  mixed
-	 */
-	public static function type_json_decode($var, $settings)
+     * Decodes the JSON
+     *
+     * @param   string  value
+     */
+    public static function type_json_decode($var, array $settings): mixed
 	{
 		$assoc = false;
 		if (array_key_exists('json_assoc', $settings))
 		{
 			$assoc = (bool) $settings['json_assoc'];
 		}
-		return json_decode($var, $assoc);
+		return json_decode((string) $var, $assoc);
 	}
 
 	/**
@@ -625,34 +600,25 @@ class Observer_Typing
 	 */
 	public static function type_time_encode(\Fuel\Core\Date $var, array $settings)
 	{
-		if ( ! $var instanceof \Fuel\Core\Date)
-		{
-			throw new InvalidContentType('Value must be an instance of the Date class.');
-		}
-
-		// deal with datetime values
-		elseif ($settings['data_type'] == 'datetime')
-		{
-			return $var->format('%Y-%m-%d %H:%M:%S');
-		}
-
-		// deal with date values
-		elseif ($settings['data_type'] == 'date')
-		{
-			return $var->format('%Y-%m-%d');
-		}
-
-		// deal with time values
-		elseif ($settings['data_type'] == 'time')
-		{
-			return $var->format('%H:%M:%S');
-		}
-
-		// deal with config defined timestamps
-		elseif ($settings['data_type'] == 'time_mysql')
-		{
-			return $var->format('mysql');
-		}
+		if (! $var instanceof \Fuel\Core\Date) {
+            throw new InvalidContentType('Value must be an instance of the Date class.');
+        }
+        // deal with datetime values
+        if ($settings['data_type'] == 'datetime') {
+            return $var->format('%Y-%m-%d %H:%M:%S');
+        }
+        // deal with date values
+        if ($settings['data_type'] == 'date') {
+            return $var->format('%Y-%m-%d');
+        }
+        // deal with time values
+        if ($settings['data_type'] == 'time') {
+            return $var->format('%H:%M:%S');
+        }
+        // deal with config defined timestamps
+        if ($settings['data_type'] == 'time_mysql') {
+            return $var->format('mysql');
+        }
 
 		// assume a timestamo is required
 		return $var->get_timestamp();
@@ -669,69 +635,56 @@ class Observer_Typing
 	public static function type_time_decode($var, array $settings)
 	{
 		// deal with a 'nulled' date, which according to some RDMBS is a valid enough to store?
-		if ($var == '0000-00-00 00:00:00')
-		{
-			if (array_key_exists('null', $settings) and $settings['null'] === false)
+        if ($var == '0000-00-00 00:00:00') {
+            if (array_key_exists('null', $settings) and $settings['null'] === false)
 			{
 				throw new InvalidContentType('Value '.$var.' is not a valid date and can not be converted to a Date object.');
 			}
-			return null;
-		}
-
-		// deal with datetime values
-		elseif ($settings['data_type'] == 'datetime')
-		{
-			try
+            return null;
+        }
+        // deal with a 'nulled' date, which according to some RDMBS is a valid enough to store?
+		if ($settings['data_type'] == 'datetime') {
+            try
 			{
 				$var = \Date::create_from_string($var, '%Y-%m-%d %H:%M:%S');
 			}
-			catch (\UnexpectedValueException $e)
+			catch (\UnexpectedValueException)
 			{
 				throw new InvalidContentType('Value '.$var.' is not a valid datetime and can not be converted to a Date object.');
 			}
-		}
-
-		// deal with date values
-		elseif ($settings['data_type'] == 'date')
+        } elseif ($settings['data_type'] == 'date')
 		{
 			try
 			{
 				$var = \Date::create_from_string($var, '%Y-%m-%d');
 			}
-			catch (\UnexpectedValueException $e)
+			catch (\UnexpectedValueException)
 			{
 				throw new InvalidContentType('Value '.$var.' is not a valid date and can not be converted to a Date object.');
 			}
-		}
-
-		// deal with time values
-		elseif ($settings['data_type'] == 'time')
+		} elseif ($settings['data_type'] == 'time')
 		{
 			try
 			{
 				$var = \Date::create_from_string($var, '%H:%M:%S');
 			}
-			catch (\UnexpectedValueException $e)
+			catch (\UnexpectedValueException)
 			{
 				throw new InvalidContentType('Value '.$var.' is not a valid time and can not be converted to a Date object.');
 			}
-		}
-
-		// deal with a configured datetime value
-		elseif ($settings['data_type'] == 'time_mysql')
+		} elseif ($settings['data_type'] == 'time_mysql')
 		{
 			try
 			{
 				$var = \Date::create_from_string($var, 'mysql');
 			}
-			catch (\UnexpectedValueException $e)
+			catch (\UnexpectedValueException)
 			{
 				throw new InvalidContentType('Value '.$var.' is not a valid mysql datetime and can not be converted to a Date object.');
 			}
 		}
-
-		// else assume it is a numeric timestamp
-		else
+        // else assume it is a numeric timestamp
+        else
 		{
 			$var = \Date::forge($var);
 		}

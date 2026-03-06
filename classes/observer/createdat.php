@@ -51,10 +51,10 @@ class Observer_CreatedAt extends Observer
 	 */
 	public function __construct($class)
 	{
-		$props = $class::observers(get_class($this));
-		$this->_mysql_timestamp  = isset($props['mysql_timestamp']) ? $props['mysql_timestamp'] : static::$mysql_timestamp;
-		$this->_property         = isset($props['property']) ? $props['property'] : static::$property;
-		$this->_overwrite        = isset($props['overwrite']) ? $props['overwrite'] : true;
+		$props = $class::observers(static::class);
+		$this->_mysql_timestamp  = $props['mysql_timestamp'] ?? static::$mysql_timestamp;
+		$this->_property         = $props['property'] ?? static::$property;
+		$this->_overwrite        = $props['overwrite'] ?? true;
 	}
 
 	/**
@@ -62,7 +62,7 @@ class Observer_CreatedAt extends Observer
 	 *
 	 * @param  Model  Model object subject of this observer method
 	 */
-	public function before_insert(Model $obj)
+	public function before_insert(Model $obj): void
 	{
 		if ($this->_overwrite or empty($obj->{$this->_property}))
 		{

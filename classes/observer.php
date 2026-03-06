@@ -20,7 +20,7 @@ abstract class Observer
 	/**
 	 * @var	array	list of created observer instances created
 	 */
-	protected static $_instances = array();
+	protected static $_instances = [];
 
 	/**
 	 * Get notified of an event
@@ -28,9 +28,9 @@ abstract class Observer
 	 * @param  Model   $instance
 	 * @param  string  $event
 	 */
-	public static function orm_notify($instance, $event)
+	public static function orm_notify($instance, $event): void
 	{
-		$model_class = get_class($instance);
+		$model_class = $instance::class;
 		if (method_exists(static::instance($model_class), $event))
 		{
 			static::instance($model_class)->{$event}($instance);
@@ -44,7 +44,7 @@ abstract class Observer
 	 */
 	public static function instance($model_class)
 	{
-		$observer = get_called_class();
+		$observer = static::class;
 		if (empty(static::$_instances[$observer][$model_class]))
 		{
 			static::$_instances[$observer][$model_class] = new static($model_class);
