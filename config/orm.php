@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -10,11 +12,11 @@
  * @link       https://fuelphp.com
  */
 
-return array(
+return [
     // global query settings
     'caching' => true,
 
-	// temporal model settings
+    // temporal model settings
     'sql_max_timestamp_mysql' => '2038-01-18 22:14:08',
     'sql_max_timestamp_unix'  => 2147483647,
-);
+];

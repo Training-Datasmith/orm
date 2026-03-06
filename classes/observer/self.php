@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -18,14 +20,13 @@ namespace Orm;
  */
 class Observer_Self
 {
-	/**
+    /**
      * Get notified of an event
      */
     public static function orm_notify(Model $instance, string $event): void
-	{
-		if (method_exists($instance, $method = '_event_'.$event))
-		{
-			call_user_func([$instance, $method]);
-		}
-	}
+    {
+        if (method_exists($instance, $method = '_event_'.$event)) {
+            call_user_func([$instance, $method]);
+        }
+    }
 }

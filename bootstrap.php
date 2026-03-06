@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -10,38 +12,38 @@
  * @link       https://fuelphp.com
  */
 
-\Autoloader::add_classes(array(
-	'Orm\\Model'               => __DIR__.'/classes/model.php',
-	'Orm\\Query'               => __DIR__.'/classes/query.php',
-	'Orm\\BelongsTo'           => __DIR__.'/classes/belongsto.php',
-	'Orm\\HasMany'             => __DIR__.'/classes/hasmany.php',
-	'Orm\\HasOne'              => __DIR__.'/classes/hasone.php',
-	'Orm\\ManyMany'            => __DIR__.'/classes/manymany.php',
-	'Orm\\Relation'            => __DIR__.'/classes/relation.php',
+\Autoloader::add_classes([
+    'Orm\\Model'               => __DIR__.'/classes/model.php',
+    'Orm\\Query'               => __DIR__.'/classes/query.php',
+    'Orm\\BelongsTo'           => __DIR__.'/classes/belongsto.php',
+    'Orm\\HasMany'             => __DIR__.'/classes/hasmany.php',
+    'Orm\\HasOne'              => __DIR__.'/classes/hasone.php',
+    'Orm\\ManyMany'            => __DIR__.'/classes/manymany.php',
+    'Orm\\Relation'            => __DIR__.'/classes/relation.php',
 
-	//Speclised models
-	'Orm\\Model_Soft'          => __DIR__.'/classes/model/soft.php',
-	'Orm\\Query_Soft'          => __DIR__.'/classes/query/soft.php',
-	'Orm\\Model_Temporal'      => __DIR__.'/classes/model/temporal.php',
-	'Orm\\Query_Temporal'      => __DIR__.'/classes/query/temporal.php',
-	'Orm\\Model_Nestedset'     => __DIR__.'/classes/model/nestedset.php',
+    //Speclised models
+    'Orm\\Model_Soft'          => __DIR__.'/classes/model/soft.php',
+    'Orm\\Query_Soft'          => __DIR__.'/classes/query/soft.php',
+    'Orm\\Model_Temporal'      => __DIR__.'/classes/model/temporal.php',
+    'Orm\\Query_Temporal'      => __DIR__.'/classes/query/temporal.php',
+    'Orm\\Model_Nestedset'     => __DIR__.'/classes/model/nestedset.php',
 
-	// Observers
-	'Orm\\Observer'            => __DIR__.'/classes/observer.php',
-	'Orm\\Observer_CreatedAt'  => __DIR__.'/classes/observer/createdat.php',
-	'Orm\\Observer_Typing'     => __DIR__.'/classes/observer/typing.php',
-	'Orm\\Observer_UpdatedAt'  => __DIR__.'/classes/observer/updatedat.php',
-	'Orm\\Observer_Validation' => __DIR__.'/classes/observer/validation.php',
-	'Orm\\Observer_Self'       => __DIR__.'/classes/observer/self.php',
-	'Orm\\Observer_Slug'       => __DIR__.'/classes/observer/slug.php',
+    // Observers
+    'Orm\\Observer'            => __DIR__.'/classes/observer.php',
+    'Orm\\Observer_CreatedAt'  => __DIR__.'/classes/observer/createdat.php',
+    'Orm\\Observer_Typing'     => __DIR__.'/classes/observer/typing.php',
+    'Orm\\Observer_UpdatedAt'  => __DIR__.'/classes/observer/updatedat.php',
+    'Orm\\Observer_Validation' => __DIR__.'/classes/observer/validation.php',
+    'Orm\\Observer_Self'       => __DIR__.'/classes/observer/self.php',
+    'Orm\\Observer_Slug'       => __DIR__.'/classes/observer/slug.php',
 
-	// Exceptions
-	'Orm\\RecordNotFound'      => __DIR__.'/classes/model.php',
-	'Orm\\FrozenObject'        => __DIR__.'/classes/model.php',
-	'Orm\\InvalidContentType'  => __DIR__.'/classes/observer/typing.php',
-	'Orm\\ValidationFailed'    => __DIR__.'/classes/observer/validation.php',
-	'Orm\\RelationNotSoft'     => __DIR__.'/classes/model/soft.php',
-));
+    // Exceptions
+    'Orm\\RecordNotFound'      => __DIR__.'/classes/model.php',
+    'Orm\\FrozenObject'        => __DIR__.'/classes/model.php',
+    'Orm\\InvalidContentType'  => __DIR__.'/classes/observer/typing.php',
+    'Orm\\ValidationFailed'    => __DIR__.'/classes/observer/validation.php',
+    'Orm\\RelationNotSoft'     => __DIR__.'/classes/model/soft.php',
+]);
 
 // Ensure the orm's config is loaded for Temporal
 \Config::load('orm', true);

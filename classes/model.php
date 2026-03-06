@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -15,316 +17,302 @@ namespace Orm;
 /**
  * Record Not Found Exception
  */
-class RecordNotFound extends \OutOfBoundsException {}
+class RecordNotFound extends \OutOfBoundsException
+{
+}
 
 /**
  * Frozen Object Exception
  */
-class FrozenObject extends \RuntimeException {}
+class FrozenObject extends \RuntimeException
+{
+}
 
 class Model implements \ArrayAccess, \Iterator, \Sanitization
 {
-	/* ---------------------------------------------------------------------------
-	 * Static usage
-	 * --------------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------------
+     * Static usage
+     * --------------------------------------------------------------------------- */
 
-	/**
-	 * @var  string  connection to use
-	 */
-	// protected static $_connection = null;
+    /**
+     * @var  string  connection to use
+     */
+    // protected static $_connection = null;
 
-	/**
-	 * @var  string  write connection to use
-	 */
-	// protected static $_write_connection = null;
+    /**
+     * @var  string  write connection to use
+     */
+    // protected static $_write_connection = null;
 
-	/**
-	 * @var  string  table name to overwrite assumption
-	 */
-	// protected static $_table_name;
+    /**
+     * @var  string  table name to overwrite assumption
+     */
+    // protected static $_table_name;
 
-	/**
-	 * @var  array  array of object properties
-	 */
-	// protected static $_properties;
+    /**
+     * @var  array  array of object properties
+     */
+    // protected static $_properties;
 
-	/**
-	 * @var  array  array of views with additional properties
-	 */
-	// protected static $_views;
+    /**
+     * @var  array  array of views with additional properties
+     */
+    // protected static $_views;
 
-	/**
-	 * @var  array  array of observer classes to use
-	 */
-	// protected static $_observers;
+    /**
+     * @var  array  array of observer classes to use
+     */
+    // protected static $_observers;
 
-	/**
-	 * @var  array  relationship properties
-	 */
-	// protected static $_has_one;
-	// protected static $_belongs_to;
-	// protected static $_has_many;
-	// protected static $_many_many;
-	// protected static $_eav;
+    /**
+     * @var  array  relationship properties
+     */
+    // protected static $_has_one;
+    // protected static $_belongs_to;
+    // protected static $_has_many;
+    // protected static $_many_many;
+    // protected static $_eav;
 
-	/**
-	 * @var  array  name or names of the primary keys
-	 */
-	protected static $_primary_key = ['id'];
+    /**
+     * @var  array  name or names of the primary keys
+     */
+    protected static $_primary_key = ['id'];
 
-	/**
-	 * @var  bool  whether to allow setting PK's via forge() or from_array()
-	 */
-	protected static $block_set_pks = true;
+    /**
+     * @var  bool  whether to allow setting PK's via forge() or from_array()
+     */
+    protected static $block_set_pks = true;
 
-	/**
-	 * @var  array  name or columns that need to be excluded from any to_array() result
-	 */
-	protected static $_to_array_exclude = [];
+    /**
+     * @var  array  name or columns that need to be excluded from any to_array() result
+     */
+    protected static $_to_array_exclude = [];
 
-	/**
-	 * @var  array  cached tables
-	 */
-	protected static $_table_names_cached = [];
+    /**
+     * @var  array  cached tables
+     */
+    protected static $_table_names_cached = [];
 
-	/**
-	 * @var  array  cached properties
-	 */
-	protected static $_properties_cached = [];
+    /**
+     * @var  array  cached properties
+     */
+    protected static $_properties_cached = [];
 
-	/**
-	 * @var  array  cached properties
-	 */
-	protected static $_views_cached = [];
+    /**
+     * @var  array  cached properties
+     */
+    protected static $_views_cached = [];
 
-	/**
-	 * @var  string  relationships
-	 */
-	protected static $_relations_cached = [];
+    /**
+     * @var  string  relationships
+     */
+    protected static $_relations_cached = [];
 
-	/**
-	 * @var  array  cached observers
-	 */
-	protected static $_observers_cached = [];
+    /**
+     * @var  array  cached observers
+     */
+    protected static $_observers_cached = [];
 
-	/**
-	 * @var  array  array of fetched objects
-	 */
-	protected static $_cached_objects = [];
+    /**
+     * @var  array  array of fetched objects
+     */
+    protected static $_cached_objects = [];
 
-	/**
-	 * @var string Name of DB connection to use
-	 */
-	protected static $_connection;
+    /**
+     * @var string Name of DB connection to use
+     */
+    protected static $_connection;
 
-	/**
-	 * @var string Name of the DB connection to use when writing
-	 */
-	protected static $_write_connection;
+    /**
+     * @var string Name of the DB connection to use when writing
+     */
+    protected static $_write_connection;
 
-	/**
-	 * @var  array  array of valid relation types
-	 */
-	protected static $_valid_relations = [
-		'belongs_to'    => \Orm\BelongsTo::class,
-		'has_one'       => \Orm\HasOne::class,
-		'has_many'      => \Orm\HasMany::class,
-		'many_many'     => \Orm\ManyMany::class,
-	];
+    /**
+     * @var  array  array of valid relation types
+     */
+    protected static $_valid_relations = [
+        'belongs_to'    => \Orm\BelongsTo::class,
+        'has_one'       => \Orm\HasOne::class,
+        'has_many'      => \Orm\HasMany::class,
+        'many_many'     => \Orm\ManyMany::class,
+    ];
 
-	/**
-	 * @var  array  global array to track circular references in to_array()
-	 */
-	protected static $to_array_references = [];
+    /**
+     * @var  array  global array to track circular references in to_array()
+     */
+    protected static $to_array_references = [];
 
-	/**
-	 * Create a new model instance
-	 */
-	public static function forge($data = [], $new = true, $view = null, $cache = true): static
-	{
-		return new static($data, $new, $view, $cache);
-	}
+    /**
+     * Create a new model instance
+     */
+    public static function forge($data = [], $new = true, $view = null, $cache = true): static
+    {
+        return new static($data, $new, $view, $cache);
+    }
 
-	/**
-	 * Fetch the database connection name to use
-	 *
-	 * @param	bool	if true return the writeable connection (if set)
-	 * @return  null|string
-	 */
-	public static function connection($writeable = false)
-	{
-		$class = static::class;
+    /**
+     * Fetch the database connection name to use
+     *
+     * @param	bool	if true return the writeable connection (if set)
+     * @return  null|string
+     */
+    public static function connection($writeable = false)
+    {
+        $class = static::class;
 
-		if ($writeable and property_exists($class, '_write_connection') && static::$_write_connection !== null)
-		{
-			return static::$_write_connection;
-		}
+        if ($writeable and property_exists($class, '_write_connection') && static::$_write_connection !== null) {
+            return static::$_write_connection;
+        }
 
-		return property_exists($class, '_connection') ? static::$_connection : null;
-	}
+        return property_exists($class, '_connection') ? static::$_connection : null;
+    }
 
-	/**
-	 * Sets the connection to use for this model.
-	 * @param string $connection
-	 */
-	public static function set_connection($connection): void
-	{
-		static::$_connection = $connection;
-	}
+    /**
+     * Sets the connection to use for this model.
+     * @param string $connection
+     */
+    public static function set_connection($connection): void
+    {
+        static::$_connection = $connection;
+    }
 
-	/**
-	 * Sets the write connection to use for this model.
-	 * @param string $connection
-	 */
-	public static function set_write_connection($connection): void
-	{
-		static::$_write_connection = $connection;
-	}
+    /**
+     * Sets the write connection to use for this model.
+     * @param string $connection
+     */
+    public static function set_write_connection($connection): void
+    {
+        static::$_write_connection = $connection;
+    }
 
-	/**
-	 * Get the table name for this class
-	 *
-	 * @return  string
-	 */
-	public static function table()
-	{
-		$class = static::class;
+    /**
+     * Get the table name for this class
+     *
+     * @return  string
+     */
+    public static function table()
+    {
+        $class = static::class;
 
-		// Table name unknown
-		if ( ! array_key_exists($class, static::$_table_names_cached))
-		{
-			// Table name set in Model
-			if (property_exists($class, '_table_name'))
-			{
-				static::$_table_names_cached[$class] = static::$_table_name;
-			}
-			else
-			{
-				static::$_table_names_cached[$class] = \Inflector::tableize($class);
-			}
-		}
+        // Table name unknown
+        if (! array_key_exists($class, static::$_table_names_cached)) {
+            // Table name set in Model
+            if (property_exists($class, '_table_name')) {
+                static::$_table_names_cached[$class] = static::$_table_name;
+            } else {
+                static::$_table_names_cached[$class] = \Inflector::tableize($class);
+            }
+        }
 
-		return static::$_table_names_cached[$class];
-	}
+        return static::$_table_names_cached[$class];
+    }
 
-	/**
-	 * Get a defined condition for this class
-	 *
-	 * @param	string	type of condition to return
-	 * @return  array
-	 */
-	public static function condition($type = null)
-	{
-		$class = static::class;
+    /**
+     * Get a defined condition for this class
+     *
+     * @param	string	type of condition to return
+     * @return  array
+     */
+    public static function condition($type = null)
+    {
+        $class = static::class;
 
-		// a specific condition requested?
-		if (!property_exists($class, '_conditions'))
-		{
-			return [];
-		}
-        if ($type !== null)
-			{
-				return static::$_conditions[$type] ?? [];
-			}
+        // a specific condition requested?
+        if (!property_exists($class, '_conditions')) {
+            return [];
+        }
+        if ($type !== null) {
+            return static::$_conditions[$type] ?? [];
+        }
         return static::$_conditions;
-	}
+    }
 
-	/**
-	 * Attempt to retrieve an earlier loaded object
-	 *
-	 * @param   array|Model  $obj
-	 * @param   null|string  $class
-	 * @return  Model|false
-	 */
-	public static function cached_object($obj, $class = null)
-	{
-		$class = $class ?: static::class;
+    /**
+     * Attempt to retrieve an earlier loaded object
+     *
+     * @param   array|Model  $obj
+     * @param   null|string  $class
+     * @return  Model|false
+     */
+    public static function cached_object($obj, $class = null)
+    {
+        $class = $class ?: static::class;
 
-		$id    = (is_int($obj) or is_string($obj)) ? $obj : $class::implode_pk($obj);
+        $id    = (is_int($obj) or is_string($obj)) ? $obj : $class::implode_pk($obj);
 
-		return ( ! empty(static::$_cached_objects[$class][$id])) ? static::$_cached_objects[$class][$id] : false;
-	}
+        return (! empty(static::$_cached_objects[$class][$id])) ? static::$_cached_objects[$class][$id] : false;
+    }
 
-	/**
-	 * Flush the object cache
-	 *
-	 * @param   null|string|object  $class
-	 */
-	public static function flush_cache($class = null): void
-	{
-		// determine what to flush
-		if (func_num_args() == 0)
-		{
-			$class = static::class;
-		}
-		elseif (is_object($class))
-		{
-			$class = $class::class;
-		}
-		elseif (is_string($class))
-		{
-			$class = ltrim($class, "\\");
-		}
+    /**
+     * Flush the object cache
+     *
+     * @param   null|string|object  $class
+     */
+    public static function flush_cache($class = null): void
+    {
+        // determine what to flush
+        if (func_num_args() == 0) {
+            $class = static::class;
+        } elseif (is_object($class)) {
+            $class = $class::class;
+        } elseif (is_string($class)) {
+            $class = ltrim($class, '\\');
+        }
 
-		// flush ...
-		if (is_null($class))
-		{
-			// the entire cache
-			static::$_cached_objects = [];
-		}
-		elseif (array_key_exists($class, static::$_cached_objects))
-		{
-			// the requested object cache
-			unset(static::$_cached_objects[$class]);
-		}
-	}
+        // flush ...
+        if (is_null($class)) {
+            // the entire cache
+            static::$_cached_objects = [];
+        } elseif (array_key_exists($class, static::$_cached_objects)) {
+            // the requested object cache
+            unset(static::$_cached_objects[$class]);
+        }
+    }
 
-	/**
-	 * Get the primary key(s) of this class
-	 *
-	 * @return  array
-	 */
-	public static function primary_key()
-	{
-		return static::$_primary_key;
-	}
+    /**
+     * Get the primary key(s) of this class
+     *
+     * @return  array
+     */
+    public static function primary_key()
+    {
+        return static::$_primary_key;
+    }
 
-	/**
-	 * Implode the primary keys within the data into a unique string for the runtime
-	 *
-	 * Note: as explained below, it is not possible to use the output to match an item after runtime
-	 *  - The format contains no reference to which value is destined for which key
-	 *  - The format does not encode the values
-	 *
-	 * @internal Designed for internal use only
-	 *
-	 * @param   array
-	 * @return  string
-	 */
-	public static function implode_pk(array $data): ?string
-	{
-		if (count(static::$_primary_key) == 1)
-		{
-			$p = reset(static::$_primary_key);
-			return (is_object($data)
-				? strval($data->{$p})
-				: (isset($data[$p])
-					? strval($data[$p])
-					: null));
-		}
+    /**
+     * Implode the primary keys within the data into a unique string for the runtime
+     *
+     * Note: as explained below, it is not possible to use the output to match an item after runtime
+     *  - The format contains no reference to which value is destined for which key
+     *  - The format does not encode the values
+     *
+     * @internal Designed for internal use only
+     *
+     * @param   array
+     * @return  string
+     */
+    public static function implode_pk(array $data): ?string
+    {
+        if (count(static::$_primary_key) == 1) {
+            $p = reset(static::$_primary_key);
+            return (is_object($data)
+                ? strval($data->{$p})
+                : (isset($data[$p])
+                    ? strval($data[$p])
+                    : null));
+        }
 
-		$pk = '';
-		foreach (static::$_primary_key as $p)
-		{
-			if (is_null((is_object($data) ? $data->{$p} : ($data[$p] ?? null))))
-			{
-				return null;
-			}
-			$pk .= '['.(is_object($data) ? $data->{$p} : $data[$p]).']';
-		}
+        $pk = '';
+        foreach (static::$_primary_key as $p) {
+            if (is_null((is_object($data) ? $data->{$p} : ($data[$p] ?? null)))) {
+                return null;
+            }
+            $pk .= '['.(is_object($data) ? $data->{$p} : $data[$p]).']';
+        }
 
-		return $pk;
-	}
+        return $pk;
+    }
 
     /**
      * Get the class's properties
@@ -333,69 +321,60 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      *
      * @return  array
      */
-	public static function properties()
-	{
-		$class = static::class;
+    public static function properties()
+    {
+        $class = static::class;
 
-		// If already determined
-		if (array_key_exists($class, static::$_properties_cached))
-		{
-			return static::$_properties_cached[$class];
-		}
+        // If already determined
+        if (array_key_exists($class, static::$_properties_cached)) {
+            return static::$_properties_cached[$class];
+        }
 
-		// Try to grab the properties from the class...
-		if (property_exists($class, '_properties'))
-		{
-			$properties = static::$_properties;
-			foreach ($properties as $key => $p)
-			{
-				if (is_string($p))
-				{
-					unset($properties[$key]);
-					$properties[$p] = [];
-				}
-			}
-		}
+        // Try to grab the properties from the class...
+        if (property_exists($class, '_properties')) {
+            $properties = static::$_properties;
+            foreach ($properties as $key => $p) {
+                if (is_string($p)) {
+                    unset($properties[$key]);
+                    $properties[$p] = [];
+                }
+            }
+        }
 
-		// ...if the above failed, run DB query to fetch properties
-		if (empty($properties))
-		{
-			try
-			{
-				$properties = \DB::list_columns(static::table(), null, static::connection());
-			}
-			catch (\Exception $e)
-			{
-				throw new \FuelException('Listing columns failed, you have to set the model properties with a '.
-					'static $_properties setting in the model. Original exception: '.$e->getMessage());
-			}
-		}
+        // ...if the above failed, run DB query to fetch properties
+        if (empty($properties)) {
+            try {
+                $properties = \DB::list_columns(static::table(), null, static::connection());
+            } catch (\Exception $e) {
+                throw new \FuelException('Listing columns failed, you have to set the model properties with a '.
+                    'static $_properties setting in the model. Original exception: '.$e->getMessage());
+            }
+        }
 
-		// cache the properties for next usage
-		static::$_properties_cached[$class] = $properties;
+        // cache the properties for next usage
+        static::$_properties_cached[$class] = $properties;
 
-		return static::$_properties_cached[$class];
-	}
+        return static::$_properties_cached[$class];
+    }
 
-	/**
-	 * Fetches a property description array, or specific data from it
-	 *
-	 * @param   string  property or property.key
-	 * @param   mixed   return value when key not present
-	 * @return  mixed
-	 */
-	public static function property($key, $default = null)
-	{
-		$class = static::class;
+    /**
+     * Fetches a property description array, or specific data from it
+     *
+     * @param   string  property or property.key
+     * @param   mixed   return value when key not present
+     * @return  mixed
+     */
+    public static function property($key, $default = null)
+    {
+        $class = static::class;
 
-		// If already determined
-		if ( ! array_key_exists($class, static::$_properties_cached))
-		{
-			static::properties();
-		}
+        // If already determined
+        if (! array_key_exists($class, static::$_properties_cached)) {
+            static::properties();
+        }
 
-		return \Arr::get(static::$_properties_cached[$class], $key, $default);
-	}
+        return \Arr::get(static::$_properties_cached[$class], $key, $default);
+    }
 
     /**
      * Fetch the model's views
@@ -404,189 +383,158 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      *
      * @return  array
      */
-	public static function views()
-	{
-		$class = static::class;
+    public static function views()
+    {
+        $class = static::class;
 
-		if ( ! isset(static::$_views_cached[$class]))
-		{
-			static::$_views_cached[$class] = [];
-			if (property_exists($class, '_views'))
-			{
-				$views = $class::$_views;
-				foreach ($views as $k => $v)
-				{
-					if ( ! isset($v['columns']))
-					{
-						throw new \InvalidArgumentException('Database view '.$k.' is defined without columns.');
-					}
-					$v['columns'] = (array) $v['columns'];
-					if ( ! isset($v['view']))
-					{
-						$v['view'] = $k;
-					}
-					static::$_views_cached[$class][$k] = $v;
-				}
-			}
-		}
+        if (! isset(static::$_views_cached[$class])) {
+            static::$_views_cached[$class] = [];
+            if (property_exists($class, '_views')) {
+                $views = $class::$_views;
+                foreach ($views as $k => $v) {
+                    if (! isset($v['columns'])) {
+                        throw new \InvalidArgumentException('Database view '.$k.' is defined without columns.');
+                    }
+                    $v['columns'] = (array) $v['columns'];
+                    if (! isset($v['view'])) {
+                        $v['view'] = $k;
+                    }
+                    static::$_views_cached[$class][$k] = $v;
+                }
+            }
+        }
 
-		return static::$_views_cached[$class];
-	}
+        return static::$_views_cached[$class];
+    }
 
-	/**
-	 * Get the class's relations
-	 *
-	 * @param bool $specific
-	 * @return  HasOne|HasMany|ManyMany|Belongsto|HasOne[]|HasMany[]|ManyMany[]|Belongsto[]
-	 */
-	public static function relations($specific = false): array|false|object
-	{
-		$class = static::class;
+    /**
+     * Get the class's relations
+     *
+     * @param bool $specific
+     * @return  HasOne|HasMany|ManyMany|Belongsto|HasOne[]|HasMany[]|ManyMany[]|Belongsto[]
+     */
+    public static function relations($specific = false): array|false|object
+    {
+        $class = static::class;
 
-		if ( ! array_key_exists($class, static::$_relations_cached))
-		{
-			$relations = [];
-			foreach (static::$_valid_relations as $rel_name => $rel_class)
-			{
-				if (property_exists($class, '_'.$rel_name))
-				{
-					foreach (static::${'_'.$rel_name} as $key => $settings)
-					{
-						$name = is_string($settings) ? $settings : $key;
-						$settings = is_array($settings) ? $settings : [];
-						$relations[$name] = new $rel_class($class, $name, $settings);
-					}
-				}
-			}
+        if (! array_key_exists($class, static::$_relations_cached)) {
+            $relations = [];
+            foreach (static::$_valid_relations as $rel_name => $rel_class) {
+                if (property_exists($class, '_'.$rel_name)) {
+                    foreach (static::${'_'.$rel_name} as $key => $settings) {
+                        $name = is_string($settings) ? $settings : $key;
+                        $settings = is_array($settings) ? $settings : [];
+                        $relations[$name] = new $rel_class($class, $name, $settings);
+                    }
+                }
+            }
 
-			static::$_relations_cached[$class] = $relations;
-		}
+            static::$_relations_cached[$class] = $relations;
+        }
 
-		if ($specific === false)
-		{
-			return static::$_relations_cached[$class];
-		}
-        if ( ! array_key_exists($specific, static::$_relations_cached[$class]))
-			{
-				return false;
-			}
+        if ($specific === false) {
+            return static::$_relations_cached[$class];
+        }
+        if (! array_key_exists($specific, static::$_relations_cached[$class])) {
+            return false;
+        }
         return static::$_relations_cached[$class][$specific];
-	}
+    }
 
-	/**
-	 * Get the name of the class that defines a relation
-	 *
-	 * @param   string
-	 * @return  array
-	 */
-	public static function related_class($relation)
-	{
-		$class = static::class;
+    /**
+     * Get the name of the class that defines a relation
+     *
+     * @param   string
+     * @return  array
+     */
+    public static function related_class($relation)
+    {
+        $class = static::class;
 
-		foreach (static::$_valid_relations as $rel_name => $rel_class)
-		{
-			if (property_exists($class, '_'.$rel_name))
-			{
-				foreach (static::${'_'.$rel_name} as $key => $value)
-				{
-					if (is_string($value))
-					{
-						if ($value === $relation)
-						{
-							return \Inflector::classify('model_'.$value);
-						}
-					}
-					else
-					{
-						if ($key === $relation)
-						{
-							return static::${'_'.$rel_name}[$relation]['model_to'];
-						}
-					}
-				}
-			}
-		}
+        foreach (static::$_valid_relations as $rel_name => $rel_class) {
+            if (property_exists($class, '_'.$rel_name)) {
+                foreach (static::${'_'.$rel_name} as $key => $value) {
+                    if (is_string($value)) {
+                        if ($value === $relation) {
+                            return \Inflector::classify('model_'.$value);
+                        }
+                    } else {
+                        if ($key === $relation) {
+                            return static::${'_'.$rel_name}[$relation]['model_to'];
+                        }
+                    }
+                }
+            }
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	/**
-	 * Get the class's observers and what they observe
-	 *
-	 * @param   string  specific observer to retrieve info of, allows direct param access by using dot notation
-	 * @param   mixed   default return value when specific key wasn't found
-	 * @return  array
-	 */
-	public static function observers($specific = null, $default = null)
-	{
-		$class = static::class;
+    /**
+     * Get the class's observers and what they observe
+     *
+     * @param   string  specific observer to retrieve info of, allows direct param access by using dot notation
+     * @param   mixed   default return value when specific key wasn't found
+     * @return  array
+     */
+    public static function observers($specific = null, $default = null)
+    {
+        $class = static::class;
 
-		if ( ! array_key_exists($class, static::$_observers_cached))
-		{
-			$observers = [];
-			if (property_exists($class, '_observers'))
-			{
-				foreach (static::$_observers as $obs_k => $obs_v)
-				{
-					if (is_int($obs_k))
-					{
-						$observers[$obs_v] = [];
-					}
-					else
-					{
-						if (is_string($obs_v) or (is_array($obs_v) and is_int(key($obs_v))))
-						{
-							// @TODO deprecated until v1.4
-							logger(\Fuel::L_WARNING, 'Passing observer events as array is deprecated, they must be
+        if (! array_key_exists($class, static::$_observers_cached)) {
+            $observers = [];
+            if (property_exists($class, '_observers')) {
+                foreach (static::$_observers as $obs_k => $obs_v) {
+                    if (is_int($obs_k)) {
+                        $observers[$obs_v] = [];
+                    } else {
+                        if (is_string($obs_v) or (is_array($obs_v) and is_int(key($obs_v)))) {
+                            // @TODO deprecated until v1.4
+                            logger(\Fuel::L_WARNING, 'Passing observer events as array is deprecated, they must be
 								inside another array under a key "events". Check the docs for more info.', __METHOD__);
-							$observers[$obs_k] = ['events' => (array) $obs_v];
-						}
-						else
-						{
-							$observers[$obs_k] = $obs_v;
-						}
-					}
-				}
-			}
-			static::$_observers_cached[$class] = $observers;
-		}
+                            $observers[$obs_k] = ['events' => (array) $obs_v];
+                        } else {
+                            $observers[$obs_k] = $obs_v;
+                        }
+                    }
+                }
+            }
+            static::$_observers_cached[$class] = $observers;
+        }
 
-		if ($specific)
-		{
-			return \Arr::get(static::$_observers_cached[$class], $specific, $default);
-		}
+        if ($specific) {
+            return \Arr::get(static::$_observers_cached[$class], $specific, $default);
+        }
 
-		return static::$_observers_cached[$class];
-	}
+        return static::$_observers_cached[$class];
+    }
 
-	/**
+    /**
      * Register an observer
      *
      * @param	string	class name of the observer (including namespace)
      * @param	mixed	observer options
      */
     public static function register_observer($name, $options = []): void
-	{
-		$class = static::class;
-		static::$_observers_cached[$class] = static::observers() + [$name => $options];
-	}
+    {
+        $class = static::class;
+        static::$_observers_cached[$class] = static::observers() + [$name => $options];
+    }
 
-	/**
+    /**
      * Unregister an observer
      *
      * @param string class name of the observer (including namespace)
      */
     public static function unregister_observer($name): void
-	{
-		$class = static::class;
-		foreach (static::observers() as $key => $value)
-		{
-			if ((is_array($value) and $key == $name) or $value == $name)
-			{
-				unset(static::$_observers_cached[$class][$key]);
-			}
-		}
-	}
+    {
+        $class = static::class;
+        foreach (static::observers() as $key => $value) {
+            if ((is_array($value) and $key == $name) or $value == $name) {
+                unset(static::$_observers_cached[$class][$key]);
+            }
+        }
+    }
 
     /**
      * Find one or more entries
@@ -597,401 +545,356 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      * @return  Model|Model[]
      */
     public static function find($id = null, array $options = null)
-	{
-		// deal with null valued PK's
-		if (is_null($id))
-		{
-			// if no options are passed, simply return null. a PK with a null value can exist
-			return is_array($options) ? static::query($options) : null;
-		}
+    {
+        // deal with null valued PK's
+        if (is_null($id)) {
+            // if no options are passed, simply return null. a PK with a null value can exist
+            return is_array($options) ? static::query($options) : null;
+        }
 
-		// make sure options is an array, before we continue
-		is_null($options) and $options = [];
+        // make sure options is an array, before we continue
+        is_null($options) and $options = [];
         // return all that match $options array
         if ($id === 'all') {
             return static::query($options)->get();
         }
 
-		// return all that match $options array
-		if ($id === 'first' or $id === 'last') {
+        // return all that match $options array
+        if ($id === 'first' or $id === 'last') {
             $query = static::query($options);
-            foreach(static::primary_key() as $pk)
-			{
-				$query->order_by($pk, $id == 'first' ? 'ASC' : 'DESC');
-			}
+            foreach (static::primary_key() as $pk) {
+                $query->order_by($pk, $id == 'first' ? 'ASC' : 'DESC');
+            }
             return $query->get_one();
         }
         $cache_pk = $where = [];
         $id = (array) $id;
-        foreach (static::primary_key() as $pk)
-			{
-				$where[] = [$pk, '=', current($id)];
-				$cache_pk[$pk] = current($id);
-				next($id);
-			}
+        foreach (static::primary_key() as $pk) {
+            $where[] = [$pk, '=', current($id)];
+            $cache_pk[$pk] = current($id);
+            next($id);
+        }
         if (array_key_exists(static::class, static::$_cached_objects)
-			    and array_key_exists(static::implode_pk($cache_pk), static::$_cached_objects[static::class])
-			    and (! isset($options['from_cache']) or $options['from_cache'] == true))
-			{
-				return static::$_cached_objects[static::class][static::implode_pk($cache_pk)];
-			}
+                and array_key_exists(static::implode_pk($cache_pk), static::$_cached_objects[static::class])
+                and (! isset($options['from_cache']) or $options['from_cache'] == true)) {
+            return static::$_cached_objects[static::class][static::implode_pk($cache_pk)];
+        }
         array_key_exists('where', $options) and $where = array_merge($options['where'], $where);
         $options['where'] = $where;
         return static::query($options)->get_one();
-	}
+    }
 
-	/**
-	 * Creates a new query with optional settings up front
-	 *
-	 * @param   array
-	 * @return  Query
-	 */
-	public static function query($options = [])
-	{
-		return Query::forge(static::class, [static::connection(), static::connection(true)], $options);
-	}
+    /**
+     * Creates a new query with optional settings up front
+     *
+     * @param   array
+     * @return  Query
+     */
+    public static function query($options = [])
+    {
+        return Query::forge(static::class, [static::connection(), static::connection(true)], $options);
+    }
 
-	/**
-	 * Count entries, optionally only those matching the $options
-	 *
-	 * @param   array
-	 * @return  int
-	 */
-	public static function count(array $options = [])
-	{
-		return static::query($options)->count();
-	}
+    /**
+     * Count entries, optionally only those matching the $options
+     *
+     * @param   array
+     * @return  int
+     */
+    public static function count(array $options = [])
+    {
+        return static::query($options)->count();
+    }
 
-	/**
-	 * Find the maximum
-	 *
-	 * @param   mixed
-	 * @param   array
-	 * @return  bool|int Maximum value or false
-	 */
-	public static function max($key = null)
-	{
-		return static::query()->max($key ?: static::primary_key());
-	}
+    /**
+     * Find the maximum
+     *
+     * @param   mixed
+     * @param   array
+     * @return  bool|int Maximum value or false
+     */
+    public static function max($key = null)
+    {
+        return static::query()->max($key ?: static::primary_key());
+    }
 
-	/**
-	 * Find the minimum
-	 *
-	 * @param   mixed
-	 * @param   array
-	 * @return  object|array
-	 */
-	public static function min($key = null)
-	{
-		return static::query()->min($key ?: static::primary_key());
-	}
+    /**
+     * Find the minimum
+     *
+     * @param   mixed
+     * @param   array
+     * @return  object|array
+     */
+    public static function min($key = null)
+    {
+        return static::query()->min($key ?: static::primary_key());
+    }
 
-	public static function __callStatic(string $method, array $args)
-	{
-		// storage for the type of find query
-		$find_type = false;
+    public static function __callStatic(string $method, array $args)
+    {
+        // storage for the type of find query
+        $find_type = false;
 
-		// Start with count_by? Get counting!
-		if (str_starts_with($method, 'count_by'))
-		{
-			$find_type = 'count';
-			$fields = substr($method, 9);
-		}
+        // Start with count_by? Get counting!
+        if (str_starts_with($method, 'count_by')) {
+            $find_type = 'count';
+            $fields = substr($method, 9);
+        }
 
-		// Otherwise, lets find stuff
-		elseif (str_starts_with($method, 'find_'))
-		{
-			if ($method == 'find_by')
-			{
-				$find_type = 'all';
-				$fields = array_shift($args);
-			}
-			else
-			{
-				$find_type = str_starts_with($method, 'find_all_by_') ? 'all' : (str_starts_with($method, 'find_by_') ? 'first' : false);
-				$fields = $find_type === 'first' ? substr($method, 8) : substr($method, 12);
-			}
-		}
+        // Otherwise, lets find stuff
+        elseif (str_starts_with($method, 'find_')) {
+            if ($method == 'find_by') {
+                $find_type = 'all';
+                $fields = array_shift($args);
+            } else {
+                $find_type = str_starts_with($method, 'find_all_by_') ? 'all' : (str_starts_with($method, 'find_by_') ? 'first' : false);
+                $fields = $find_type === 'first' ? substr($method, 8) : substr($method, 12);
+            }
+        }
 
-		// bail out if an invalid find type is detected
-		if ( ! $find_type)
-		{
-			throw new \FuelException('Invalid method call.  Method '.$method.' does not exist.', 0);
-		}
+        // bail out if an invalid find type is detected
+        if (! $find_type) {
+            throw new \FuelException('Invalid method call.  Method '.$method.' does not exist.', 0);
+        }
 
-		$where = $or_where = [];
+        $where = $or_where = [];
 
-		if (($and_parts = explode('_and_', $fields)))
-		{
-			foreach ($and_parts as $and_part)
-			{
-				$or_parts = explode('_or_', $and_part);
+        if (($and_parts = explode('_and_', $fields))) {
+            foreach ($and_parts as $and_part) {
+                $or_parts = explode('_or_', $and_part);
 
-				if (count($or_parts) == 1)
-				{
-					$where[] = [$or_parts[0], array_shift($args)];
-				}
-				else
-				{
-					foreach($or_parts as $or_part)
-					{
-						$or_where[] = [$or_part, array_shift($args)];
-					}
-				}
-			}
-		}
+                if (count($or_parts) == 1) {
+                    $where[] = [$or_parts[0], array_shift($args)];
+                } else {
+                    foreach ($or_parts as $or_part) {
+                        $or_where[] = [$or_part, array_shift($args)];
+                    }
+                }
+            }
+        }
 
-		$options = count($args) > 0 ? array_pop($args) : [];
+        $options = count($args) > 0 ? array_pop($args) : [];
 
-		if ( ! empty($where))
-		{
-			if ( ! array_key_exists('where', $options))
-			{
-				$options['where'] = $where;
-			}
-			else
-			{
-				$options['where'] = array_merge($where, $options['where']);
-			}
-		}
+        if (! empty($where)) {
+            if (! array_key_exists('where', $options)) {
+                $options['where'] = $where;
+            } else {
+                $options['where'] = array_merge($where, $options['where']);
+            }
+        }
 
-		if ( ! empty($or_where))
-		{
-			if ( ! array_key_exists('or_where', $options))
-			{
-				$options['or_where'] = $or_where;
-			}
-			else
-			{
-				$options['or_where'] = array_merge($or_where, $options['or_where']);
-			}
-		}
+        if (! empty($or_where)) {
+            if (! array_key_exists('or_where', $options)) {
+                $options['or_where'] = $or_where;
+            } else {
+                $options['or_where'] = array_merge($or_where, $options['or_where']);
+            }
+        }
 
-		if ($find_type == 'count')
-		{
-			return static::count($options);
-		}
+        if ($find_type == 'count') {
+            return static::count($options);
+        }
         return static::find($find_type, $options);
 
-		// min_...($options)
-		// max_...($options)
-	}
+        // min_...($options)
+        // max_...($options)
+    }
 
-	/* ---------------------------------------------------------------------------
-	 * Object usage
-	 * --------------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------------
+     * Object usage
+     * --------------------------------------------------------------------------- */
 
-	/**
-	 * @var  bool  keeps track of whether it's a new object
-	 */
-	protected $_is_new = true;
+    /**
+     * @var  bool  keeps track of whether it's a new object
+     */
+    protected $_is_new = true;
 
-	/**
-	 * @var  bool  keeps to object frozen
-	 */
-	protected $_frozen = false;
+    /**
+     * @var  bool  keeps to object frozen
+     */
+    protected $_frozen = false;
 
-	/**
-	 * @var  bool  $_sanitization_enabled  If this is a records data will be sanitized on get
-	 */
-	protected $_sanitization_enabled = false;
+    /**
+     * @var  bool  $_sanitization_enabled  If this is a records data will be sanitized on get
+     */
+    protected $_sanitization_enabled = false;
 
-	/**
-	 * @var  array  keeps the current state of the object
-	 */
-	protected array $_data = [];
+    /**
+     * @var  array  keeps the current state of the object
+     */
+    protected array $_data = [];
 
-	/**
-	 * @var  array  storage for custom properties on this object
-	 */
-	protected array $_custom_data;
+    /**
+     * @var  array  storage for custom properties on this object
+     */
+    protected array $_custom_data;
 
-	/**
-	 * @var  array  keeps a copy of the object as it was retrieved from the database
-	 */
-	protected $_original = [];
+    /**
+     * @var  array  keeps a copy of the object as it was retrieved from the database
+     */
+    protected $_original = [];
 
-	/**
-	 * @var  array
-	 */
-	protected $_data_relations = [];
+    /**
+     * @var  array
+     */
+    protected $_data_relations = [];
 
-	/**
-	 * @var  array  keeps a copy of the relation ids that were originally retrieved from the database
-	 */
-	protected $_original_relations = [];
+    /**
+     * @var  array  keeps a copy of the relation ids that were originally retrieved from the database
+     */
+    protected $_original_relations = [];
 
-	/**
-	 * @var  array  keeps track of relations that need to be reset before saving the new ones
-	 */
-	protected $_reset_relations = [];
+    /**
+     * @var  array  keeps track of relations that need to be reset before saving the new ones
+     */
+    protected $_reset_relations = [];
 
-	/**
-	 * @var  array  disabled observer events
-	 */
-	protected $_disabled_events = [];
+    /**
+     * @var  array  disabled observer events
+     */
+    protected $_disabled_events = [];
 
-	/**
-	 * @var  string  view name when used
-	 */
-	protected $_view;
+    /**
+     * @var  string  view name when used
+     */
+    protected $_view;
 
-	/**
-	 * Constructor
-	 *
-	 * @param  array
-	 * @param  bool
-	 */
-	public function __construct($data = [], $new = true, $view = null, $cache = true)
-	{
-		// Make sure we get the correct dataformat passed
-		if ( ! is_array($data) and ! $data instanceOf \ArrayAccess)
-		{
-			throw new \ErrorException(
-				'Argument 1 passed to '.__METHOD__.'() must be of the type array or implement ArrayAccess, '.gettype($data).' given',
-				0, E_ERROR, __FILE__, __LINE__-7 // adjust the line to point to the function prototype, not this line!
-			);
-		}
+    /**
+     * Constructor
+     *
+     * @param  array
+     * @param  bool
+     */
+    public function __construct($data = [], $new = true, $view = null, $cache = true)
+    {
+        // Make sure we get the correct dataformat passed
+        if (! is_array($data) and ! $data instanceof \ArrayAccess) {
+            throw new \ErrorException(
+                'Argument 1 passed to '.__METHOD__.'() must be of the type array or implement ArrayAccess, '.gettype($data).' given',
+                0,
+                E_ERROR,
+                __FILE__,
+                __LINE__ - 7 // adjust the line to point to the function prototype, not this line!
+            );
+        }
 
-		// This is to deal with PHP's native hydration that happens before constructor is called
-		// for some weird reason, for example using the DB's as_object() function
-		if( ! empty($this->_data) or  ! empty($this->_custom_data))
-		{
-			// merge the injected data with the passed data
-			$data = array_merge($this->_custom_data, $this->_data, $data);
+        // This is to deal with PHP's native hydration that happens before constructor is called
+        // for some weird reason, for example using the DB's as_object() function
+        if (! empty($this->_data) or  ! empty($this->_custom_data)) {
+            // merge the injected data with the passed data
+            $data = array_merge($this->_custom_data, $this->_data, $data);
 
-			// and reset them
-			$this->_data = [];
-			$this->_custom_data = [];
+            // and reset them
+            $this->_data = [];
+            $this->_custom_data = [];
 
-			// and mark it as existing data
-			$new = false;
-		}
+            // and mark it as existing data
+            $new = false;
+        }
 
-		// move the passed data to the correct container
-		$properties = static::properties();
-		foreach ($properties as $prop => $settings)
-		{
-			// do we have data for this this model property?
-			if (array_key_exists($prop, $data))
-			{
-				// store it in the data container
-				$this->_data[$prop] = $data[$prop];
-				unset($data[$prop]);
-			}
+        // move the passed data to the correct container
+        $properties = static::properties();
+        foreach ($properties as $prop => $settings) {
+            // do we have data for this this model property?
+            if (array_key_exists($prop, $data)) {
+                // store it in the data container
+                $this->_data[$prop] = $data[$prop];
+                unset($data[$prop]);
+            }
 
-			// property not present, do we have a default value?
-			elseif ($new and array_key_exists('default', $settings))
-			{
-				$this->_data[$prop] = $settings['default'];
-			}
+            // property not present, do we have a default value?
+            elseif ($new and array_key_exists('default', $settings)) {
+                $this->_data[$prop] = $settings['default'];
+            }
 
-			// no default either, initialize with null
-			else
-			{
-				$this->_data[$prop] = null;
-			}
-		}
+            // no default either, initialize with null
+            else {
+                $this->_data[$prop] = null;
+            }
+        }
 
-		// store the remainder in the custom data store
-		$this->_custom_data = $data;
+        // store the remainder in the custom data store
+        $this->_custom_data = $data;
 
-		// store the view, if one was passed
-		if ($view and array_key_exists($view, static::views()))
-		{
-			$this->_view = $view;
-		}
+        // store the view, if one was passed
+        if ($view and array_key_exists($view, static::views())) {
+            $this->_view = $view;
+        }
 
-		if ($new === false)
-		{
-			// update the original datastore and the related datastore
-			$this->_update_original($this->_data);
+        if ($new === false) {
+            // update the original datastore and the related datastore
+            $this->_update_original($this->_data);
 
-			// update the object cache if needed
-			$cache and static::$_cached_objects[static::class][static::implode_pk($this->_data)] = $this;
+            // update the object cache if needed
+            $cache and static::$_cached_objects[static::class][static::implode_pk($this->_data)] = $this;
 
-			// mark the object as existing
-			$this->_is_new = false;
+            // mark the object as existing
+            $this->_is_new = false;
 
-			// and fire the after-load observers
-			$this->observe('after_load');
-		}
-		else
-		{
-			// wipe any PK values present in the input if not allowed
-			if (static::$block_set_pks)
-			{
-				// make sure the primary keys are reset
-				foreach (static::$_primary_key as $pk)
-				{
-					$this->_data[$pk] = null;
-				}
-			}
+            // and fire the after-load observers
+            $this->observe('after_load');
+        } else {
+            // wipe any PK values present in the input if not allowed
+            if (static::$block_set_pks) {
+                // make sure the primary keys are reset
+                foreach (static::$_primary_key as $pk) {
+                    $this->_data[$pk] = null;
+                }
+            }
 
-			// new object, fire the after-create observers
-			$this->observe('after_create');
-		}
-	}
+            // new object, fire the after-create observers
+            $this->observe('after_create');
+        }
+    }
 
-	/**
-	 * Update the original setting for this object
-	 *
-	 * @param  array|null  $original
-	 */
-	public function _update_original($original = null): void
-	{
-		$original = is_null($original) ? $this->_data : $original;
-		$this->_original = array_merge($this->_original, $original);
+    /**
+     * Update the original setting for this object
+     *
+     * @param  array|null  $original
+     */
+    public function _update_original($original = null): void
+    {
+        $original = is_null($original) ? $this->_data : $original;
+        $this->_original = array_merge($this->_original, $original);
 
-		$this->_update_original_relations();
-	}
+        $this->_update_original_relations();
+    }
 
-	/**
-	 * Update the original relations for this object
-	 */
-	public function _update_original_relations($relations = null): void
-	{
-		if (is_null($relations))
-		{
-			$this->_original_relations = [];
-			$relations = $this->_data_relations;
-		}
-		else
-		{
-			foreach ($relations as $key => $rel)
-			{
-				// Unload the just fetched relation from the originals
-				unset($this->_original_relations[$rel]);
+    /**
+     * Update the original relations for this object
+     */
+    public function _update_original_relations($relations = null): void
+    {
+        if (is_null($relations)) {
+            $this->_original_relations = [];
+            $relations = $this->_data_relations;
+        } else {
+            foreach ($relations as $key => $rel) {
+                // Unload the just fetched relation from the originals
+                unset($this->_original_relations[$rel]);
 
-				// Unset the numeric key and set the data to update by the relation name
-				unset($relations[$key]);
-				$relations[$rel] = $this->_data_relations[$rel];
-			}
-		}
+                // Unset the numeric key and set the data to update by the relation name
+                unset($relations[$key]);
+                $relations[$rel] = $this->_data_relations[$rel];
+            }
+        }
 
-		foreach ($relations as $rel => $data)
-		{
-			if (is_array($data))
-			{
-				$this->_original_relations[$rel] = [];
-				foreach ($data as $obj)
-				{
-					if ($obj and ! $obj->is_new())
-					{
-						$this->_original_relations[$rel][] = $obj->implode_pk($obj);
-					}
-				}
-			}
-			else
-			{
-				$this->_original_relations[$rel] = null;
-				if ($data and ! $data->is_new())
-				{
-					$this->_original_relations[$rel] = $data->implode_pk($data);
-				}
-			}
-		}
-	}
+        foreach ($relations as $rel => $data) {
+            if (is_array($data)) {
+                $this->_original_relations[$rel] = [];
+                foreach ($data as $obj) {
+                    if ($obj and ! $obj->is_new()) {
+                        $this->_original_relations[$rel][] = $obj->implode_pk($obj);
+                    }
+                }
+            } else {
+                $this->_original_relations[$rel] = null;
+                if ($data and ! $data->is_new()) {
+                    $this->_original_relations[$rel] = $data->implode_pk($data);
+                }
+            }
+        }
+    }
 
     /**
      * Fetch or set relations on this object
@@ -1004,55 +907,52 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      *
      * @return  void|array
      */
-	public function _relate($rels = false)
-	{
-		if ($rels === false) {
+    public function _relate($rels = false)
+    {
+        if ($rels === false) {
             return $this->_data_relations;
         }
         if (is_array($rels)) {
-            if ($this->_frozen)
-			{
-				throw new FrozenObject('No changes allowed.');
-			}
+            if ($this->_frozen) {
+                throw new FrozenObject('No changes allowed.');
+            }
             $this->_data_relations = $rels;
+        } else {
+            throw new \FuelException('Invalid input for _relate(), should be an array.');
         }
-        else
-		{
-			throw new \FuelException('Invalid input for _relate(), should be an array.');
-		}
-	}
+    }
 
-	/**
+    /**
      * Fetch a property or relation
      *
      * @param   string
      */
     public function & __get(string $property): mixed
-	{
-		return $this->get($property);
-	}
+    {
+        return $this->get($property);
+    }
 
-	/**
-	 * Set a property or relation
-	 *
-	 * @param  string
-	 * @param  mixed
-	 *
-	 * @return Model
-	 */
-	public function __set(string $property, mixed $value)
-	{
-		return $this->set($property, $value);
-	}
+    /**
+     * Set a property or relation
+     *
+     * @param  string
+     * @param  mixed
+     *
+     * @return Model
+     */
+    public function __set(string $property, mixed $value)
+    {
+        return $this->set($property, $value);
+    }
 
-	/**
+    /**
      * Check whether a property exists, only return true for table columns, relations, eav and custom data
      *
      * @return  bool
      */
     public function __isset(string $property)
-	{
-		if (array_key_exists($property, $this->_data)) {
+    {
+        if (array_key_exists($property, $this->_data)) {
             return true;
         }
         if (static::relations($property)) {
@@ -1065,34 +965,27 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
             return true;
         }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
+    /**
      * Empty a property, relation or custom data
      */
     public function __unset(string $property)
-	{
-		if (array_key_exists($property, static::properties()))
-		{
-			$this->_data[$property] = null;
-		}
-		elseif ($rel = static::relations($property))
-		{
-			$this->_reset_relations[$property] = true;
-			$this->_data_relations[$property] = $rel->singular ? null : [];
-		}
-		elseif ($this->_get_eav($property, true, true))
-		{
-			// no additional work needed here
-		}
-		elseif (array_key_exists($property, $this->_custom_data))
-		{
-			unset($this->_custom_data[$property]);
-		}
-	}
+    {
+        if (array_key_exists($property, static::properties())) {
+            $this->_data[$property] = null;
+        } elseif ($rel = static::relations($property)) {
+            $this->_reset_relations[$property] = true;
+            $this->_data_relations[$property] = $rel->singular ? null : [];
+        } elseif ($this->_get_eav($property, true, true)) {
+            // no additional work needed here
+        } elseif (array_key_exists($property, $this->_custom_data)) {
+            unset($this->_custom_data[$property]);
+        }
+    }
 
-	/**
+    /**
      * Allow for getter, setter and unset methods
      *
      * @param   array   $args
@@ -1100,8 +993,8 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      * @throws  \BadMethodCallException
      */
     public function __call(string $method, array $args)
-	{
-		if (str_starts_with($method, 'get_')) {
+    {
+        if (str_starts_with($method, 'get_')) {
             return $this->get(substr($method, 4));
         }
         if (str_starts_with($method, 'set_')) {
@@ -1111,40 +1004,37 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
             return $this->__unset(substr($method, 6));
         }
 
-		// Throw an exception
-		throw new \BadMethodCallException('Call to undefined method '.static::class.'::'.$method.'()');
-	}
+        // Throw an exception
+        throw new \BadMethodCallException('Call to undefined method '.static::class.'::'.$method.'()');
+    }
 
-	/**
-	 * Allow object cloning to new object
-	 */
-	public function __clone()
-	{
-		// Reset primary keys
-		foreach (static::$_primary_key as $pk)
-		{
-			$this->_data[$pk] = null;
-		}
+    /**
+     * Allow object cloning to new object
+     */
+    public function __clone()
+    {
+        // Reset primary keys
+        foreach (static::$_primary_key as $pk) {
+            $this->_data[$pk] = null;
+        }
 
-		// This is a new object
-		$this->_is_new = true;
-		$this->_original = [];
-		$this->_original_relations = [];
+        // This is a new object
+        $this->_is_new = true;
+        $this->_original = [];
+        $this->_original_relations = [];
 
-		// Cleanup relations
-		foreach (static::relations() as $name => $rel)
-		{
-			// singular relations (hasone, belongsto) can't be copied, neither can HasMany
-			if ($rel->singular or $rel instanceof HasMany)
-			{
-				unset($this->_data_relations[$name]);
-			}
-		}
+        // Cleanup relations
+        foreach (static::relations() as $name => $rel) {
+            // singular relations (hasone, belongsto) can't be copied, neither can HasMany
+            if ($rel->singular or $rel instanceof HasMany) {
+                unset($this->_data_relations[$name]);
+            }
+        }
 
-		$this->observe('after_clone');
-	}
+        $this->observe('after_clone');
+    }
 
-	/**
+    /**
      * Get
      *
      * Gets a property or
@@ -1155,71 +1045,55 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      * @return  mixed
      */
     public function & get(string $property, array $conditions = [])
-	{
-		// database columns
-		if (array_key_exists($property, static::properties()))
-		{
-			if ( ! array_key_exists($property, $this->_data))
-			{
-				$result = null;
-			}
-			elseif ($this->_sanitization_enabled)
-			{
-				// use a copy
-				$result = $this->_data[$property];
-			}
-			else
-			{
-				// use a reference
-				$result =& $this->_data[$property];
-			}
-		}
+    {
+        // database columns
+        if (array_key_exists($property, static::properties())) {
+            if (! array_key_exists($property, $this->_data)) {
+                $result = null;
+            } elseif ($this->_sanitization_enabled) {
+                // use a copy
+                $result = $this->_data[$property];
+            } else {
+                // use a reference
+                $result = & $this->_data[$property];
+            }
+        }
 
-		// related models
-		elseif ($rel = static::relations($property))
-		{
-			if ( ! array_key_exists($property, $this->_data_relations))
-			{
-				$this->_data_relations[$property] = $rel->get($this, $conditions);
-				$this->_update_original_relations([$property]);
-			}
+        // related models
+        elseif ($rel = static::relations($property)) {
+            if (! array_key_exists($property, $this->_data_relations)) {
+                $this->_data_relations[$property] = $rel->get($this, $conditions);
+                $this->_update_original_relations([$property]);
+            }
 
-			$result =& $this->_data_relations[$property];
-		}
+            $result = & $this->_data_relations[$property];
+        }
 
-		// EAV properties
-		elseif (($result = $this->_get_eav($property)) !== false)
-		{
-			// nothing else to do here
-		}
+        // EAV properties
+        elseif (($result = $this->_get_eav($property)) !== false) {
+            // nothing else to do here
+        }
 
-		// stored custom data
-		elseif (array_key_exists($property, $this->_custom_data))
-		{
-			if ($this->_sanitization_enabled)
-			{
-				// use a copy
-				$result = $this->_custom_data[$property];
-			}
-			else
-			{
-				// use a reference
-				$result =& $this->_custom_data[$property];
-			}
-		}
-		else
-		{
-			throw new \OutOfBoundsException('Property "'.$property.'" not found for '.static::class.'.');
-		}
+        // stored custom data
+        elseif (array_key_exists($property, $this->_custom_data)) {
+            if ($this->_sanitization_enabled) {
+                // use a copy
+                $result = $this->_custom_data[$property];
+            } else {
+                // use a reference
+                $result = & $this->_custom_data[$property];
+            }
+        } else {
+            throw new \OutOfBoundsException('Property "'.$property.'" not found for '.static::class.'.');
+        }
 
-		// do we need to clean before returning the result?
-		if ($this->_sanitization_enabled)
-		{
-			return $this->_sanitize($property, $result);
-		}
+        // do we need to clean before returning the result?
+        if ($this->_sanitization_enabled) {
+            return $this->_sanitize($property, $result);
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 
     /**
      * Set
@@ -1237,302 +1111,257 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      * @throws FrozenObject No changes allowed
      */
     public function set($property, $value = null): static
-	{
-		if ($this->_frozen)
-		{
-			throw new FrozenObject('No changes allowed.');
-		}
+    {
+        if ($this->_frozen) {
+            throw new FrozenObject('No changes allowed.');
+        }
 
-		if (is_array($property))
-		{
-			foreach ($property as $p => $v)
-			{
-				$this->set($p, $v);
-			}
-		}
-		else
-		{
-			if (func_num_args() < 2)
-			{
-				throw new \InvalidArgumentException('You need to pass both a property name and a value to set().');
-			}
+        if (is_array($property)) {
+            foreach ($property as $p => $v) {
+                $this->set($p, $v);
+            }
+        } else {
+            if (func_num_args() < 2) {
+                throw new \InvalidArgumentException('You need to pass both a property name and a value to set().');
+            }
 
-			// is it a primary key we're updating?
-			if (in_array($property, static::primary_key()) and $this->{$property} !== null and $this->{$property} != $value)
-			{
-				throw new \FuelException('Primary key on model '.static::class.' cannot be changed.');
-			}
+            // is it a primary key we're updating?
+            if (in_array($property, static::primary_key()) and $this->{$property} !== null and $this->{$property} != $value) {
+                throw new \FuelException('Primary key on model '.static::class.' cannot be changed.');
+            }
 
-			// is it a model property we're updating?
-			if (array_key_exists($property, static::properties()))
-			{
-				$this->_data[$property] = $value;
-			}
+            // is it a model property we're updating?
+            if (array_key_exists($property, static::properties())) {
+                $this->_data[$property] = $value;
+            }
 
-			// or perhaps a related model?
-			elseif ($rel = static::relations($property))
-			{
-				$this->is_fetched($property) or $this->_reset_relations[$property] = true;
-				if (isset($this->_data_relations[$property]) and ($this->_data_relations[$property] instanceof self) and is_array($value))
-				{
-					$this->_data_relations[$property]->set($value);
-				}
-				elseif ($value === null or $value === [])
-				{
-					$this->_reset_relations[$property] = true;
-					$this->_data_relations[$property] = $rel->singular ? null : [];
-				}
-				else
-				{
-					$this->_data_relations[$property] = $value;
-				}
-			}
+            // or perhaps a related model?
+            elseif ($rel = static::relations($property)) {
+                $this->is_fetched($property) or $this->_reset_relations[$property] = true;
+                if (isset($this->_data_relations[$property]) and ($this->_data_relations[$property] instanceof self) and is_array($value)) {
+                    $this->_data_relations[$property]->set($value);
+                } elseif ($value === null or $value === []) {
+                    $this->_reset_relations[$property] = true;
+                    $this->_data_relations[$property] = $rel->singular ? null : [];
+                } else {
+                    $this->_data_relations[$property] = $value;
+                }
+            }
 
-			// none of the above, assume its custom data
-			elseif ( ! $this->_set_eav($property, $value))
-			{
-				$this->_custom_data[$property] = $value;
-			}
-		}
+            // none of the above, assume its custom data
+            elseif (! $this->_set_eav($property, $value)) {
+                $this->_custom_data[$property] = $value;
+            }
+        }
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Save the object and it's relations, create when necessary
-	 *
-	 * @param  mixed  $cascade
-	 *     null = use default config,
-	 *     bool = force/prevent cascade,
-	 *     array cascades only the relations that are in the array
+    /**
+     * Save the object and it's relations, create when necessary
+     *
+     * @param  mixed  $cascade
+     *     null = use default config,
+     *     bool = force/prevent cascade,
+     *     array cascades only the relations that are in the array
      *
      * @return bool
      */
-	public function save($cascade = null, $use_transaction = false)
-	{
-		if ($this->frozen())
-		{
-			return false;
-		}
+    public function save($cascade = null, $use_transaction = false)
+    {
+        if ($this->frozen()) {
+            return false;
+        }
 
-		if ($use_transaction)
-		{
-			$db = \Database_Connection::instance(static::connection(true));
-			$db->start_transaction();
-		}
+        if ($use_transaction) {
+            $db = \Database_Connection::instance(static::connection(true));
+            $db->start_transaction();
+        }
 
-		try
-		{
-			$this->observe('before_save');
+        try {
+            $this->observe('before_save');
 
-			$this->freeze();
-			foreach(static::relations() as $rel_name => $rel)
-			{
-				if (array_key_exists($rel_name, $this->_reset_relations))
-				{
-					if (method_exists($rel, 'delete_related'))
-					{
-						$rel->delete_related($this);
-						$this->_original_relations[$rel_name] = $rel->singular ? null : [];
-					}
-					else
-					{
-						if (empty($this->_original_relations[$rel_name]))
-						{
-							$data = $rel->get($this);
-							if (is_array($data))
-							{
-								$this->_original_relations[$rel_name] = [];
-								foreach ($data as $obj)
-								{
-									$this->_original_relations[$rel_name][] = $obj ? $obj->implode_pk($obj) : null;
-								}
-							}
-							else
-							{
-								$this->_original_relations[$rel_name] = $data ? $data->implode_pk($data) : null;
-							}
-						}
-					}
-					unset($this->_reset_relations[$rel_name]);
-				}
-				if (array_key_exists($rel_name, $this->_data_relations))
-				{
-					$rel->save($this, $this->{$rel_name},
-						array_key_exists($rel_name, $this->_original_relations) ? $this->_original_relations[$rel_name] : null,
-						false, is_array($cascade) ? in_array($rel_name, $cascade) : $cascade
-					);
-				}
-			}
-			$this->unfreeze();
+            $this->freeze();
+            foreach (static::relations() as $rel_name => $rel) {
+                if (array_key_exists($rel_name, $this->_reset_relations)) {
+                    if (method_exists($rel, 'delete_related')) {
+                        $rel->delete_related($this);
+                        $this->_original_relations[$rel_name] = $rel->singular ? null : [];
+                    } else {
+                        if (empty($this->_original_relations[$rel_name])) {
+                            $data = $rel->get($this);
+                            if (is_array($data)) {
+                                $this->_original_relations[$rel_name] = [];
+                                foreach ($data as $obj) {
+                                    $this->_original_relations[$rel_name][] = $obj ? $obj->implode_pk($obj) : null;
+                                }
+                            } else {
+                                $this->_original_relations[$rel_name] = $data ? $data->implode_pk($data) : null;
+                            }
+                        }
+                    }
+                    unset($this->_reset_relations[$rel_name]);
+                }
+                if (array_key_exists($rel_name, $this->_data_relations)) {
+                    $rel->save(
+                        $this,
+                        $this->{$rel_name},
+                        array_key_exists($rel_name, $this->_original_relations) ? $this->_original_relations[$rel_name] : null,
+                        false,
+                        is_array($cascade) ? in_array($rel_name, $cascade) : $cascade
+                    );
+                }
+            }
+            $this->unfreeze();
 
-			// Insert or update
-			$return = $this->_is_new ? $this->create() : $this->update();
+            // Insert or update
+            $return = $this->_is_new ? $this->create() : $this->update();
 
-			$this->freeze();
-			foreach(static::relations() as $rel_name => $rel)
-			{
-				if (array_key_exists($rel_name, $this->_data_relations))
-				{
-					$rel->save($this, $this->{$rel_name},
-						array_key_exists($rel_name, $this->_original_relations) ? $this->_original_relations[$rel_name] : null,
-						true, is_array($cascade) ? in_array($rel_name, $cascade) : $cascade
-					);
-				}
-			}
-			$this->unfreeze();
+            $this->freeze();
+            foreach (static::relations() as $rel_name => $rel) {
+                if (array_key_exists($rel_name, $this->_data_relations)) {
+                    $rel->save(
+                        $this,
+                        $this->{$rel_name},
+                        array_key_exists($rel_name, $this->_original_relations) ? $this->_original_relations[$rel_name] : null,
+                        true,
+                        is_array($cascade) ? in_array($rel_name, $cascade) : $cascade
+                    );
+                }
+            }
+            $this->unfreeze();
 
-			// update the original datastore and the related datastore
-			$this->_update_original();
+            // update the original datastore and the related datastore
+            $this->_update_original();
 
-			$this->observe('after_save');
+            $this->observe('after_save');
 
-			$use_transaction and $db->commit_transaction();
-		}
-		catch (\Exception $e)
-		{
-			$use_transaction and $db->rollback_transaction();
-			throw $e;
-		}
+            $use_transaction and $db->commit_transaction();
+        } catch (\Exception $e) {
+            $use_transaction and $db->rollback_transaction();
+            throw $e;
+        }
 
-		return $return;
-	}
+        return $return;
+    }
 
-	/**
-	 * Save using INSERT
-	 */
-	protected function create()
-	{
-		// Only allow creation with new object, otherwise: clone first, create later
-		if ( ! $this->is_new())
-		{
-			return false;
-		}
+    /**
+     * Save using INSERT
+     */
+    protected function create()
+    {
+        // Only allow creation with new object, otherwise: clone first, create later
+        if (! $this->is_new()) {
+            return false;
+        }
 
-		$this->observe('before_insert');
+        $this->observe('before_insert');
 
-		// Set all current values
-		$query = Query::forge(static::class, static::connection(true));
-		$primary_key = static::primary_key();
-		$properties  = array_keys(static::properties());
-		foreach ($properties as $p)
-		{
-			if ( ! (in_array($p, $primary_key) and is_null($this->{$p})))
-			{
-				$query->set($p, $this->{$p});
-			}
-		}
+        // Set all current values
+        $query = Query::forge(static::class, static::connection(true));
+        $primary_key = static::primary_key();
+        $properties  = array_keys(static::properties());
+        foreach ($properties as $p) {
+            if (! (in_array($p, $primary_key) and is_null($this->{$p}))) {
+                $query->set($p, $this->{$p});
+            }
+        }
 
-		// Insert!
-		$id = $query->insert();
+        // Insert!
+        $id = $query->insert();
 
-		// when there's one PK it might be auto-incremented, get it and set it
-		if (count($primary_key) == 1 and $id !== false)
-		{
-			$pk = reset($primary_key);
-			// only set it if it hasn't been set manually
-			is_null($this->{$pk}) and $this->{$pk} = $id;
-		}
+        // when there's one PK it might be auto-incremented, get it and set it
+        if (count($primary_key) == 1 and $id !== false) {
+            $pk = reset($primary_key);
+            // only set it if it hasn't been set manually
+            is_null($this->{$pk}) and $this->{$pk} = $id;
+        }
 
-		// update the original properties on creation and cache object for future retrieval in this request
-		$this->_is_new = false;
+        // update the original properties on creation and cache object for future retrieval in this request
+        $this->_is_new = false;
 
-		$this->_original = $this->_data;
-		static::$_cached_objects[static::class][static::implode_pk($this)] = $this;
+        $this->_original = $this->_data;
+        static::$_cached_objects[static::class][static::implode_pk($this)] = $this;
 
-		$this->observe('after_insert');
+        $this->observe('after_insert');
 
-		return $id !== false;
-	}
+        return $id !== false;
+    }
 
-	/**
-	 * Save using UPDATE
-	 */
-	protected function update(): bool
-	{
-		// New objects can't be updated, neither can frozen
-		if ($this->is_new())
-		{
-			return false;
-		}
+    /**
+     * Save using UPDATE
+     */
+    protected function update(): bool
+    {
+        // New objects can't be updated, neither can frozen
+        if ($this->is_new()) {
+            return false;
+        }
 
-		// Objects created from a view can't be updated either
-		if ($this->_view)
-		{
-			return false;
-		}
+        // Objects created from a view can't be updated either
+        if ($this->_view) {
+            return false;
+        }
 
-		// Non changed objects don't have to be saved, but return true anyway (no reason to fail)
-		if ( ! $this->is_changed(array_keys(static::properties())))
-		{
-			return true;
-		}
+        // Non changed objects don't have to be saved, but return true anyway (no reason to fail)
+        if (! $this->is_changed(array_keys(static::properties()))) {
+            return true;
+        }
 
-		$this->observe('before_update');
+        $this->observe('before_update');
 
-		// Create the query and limit to primary key(s)
-		$query       = Query::forge(static::class, static::connection(true));
-		$primary_key = static::primary_key();
-		$properties  = static::properties();
-		$properties_keys  = array_keys($properties);
-		//Add the primary keys to the where
-		$this->add_primary_keys_to_where($query);
+        // Create the query and limit to primary key(s)
+        $query       = Query::forge(static::class, static::connection(true));
+        $primary_key = static::primary_key();
+        $properties  = static::properties();
+        $properties_keys  = array_keys($properties);
+        //Add the primary keys to the where
+        $this->add_primary_keys_to_where($query);
 
-		// Set all current values
-		foreach ($properties_keys as $p)
-		{
-			if ( ! in_array($p, $primary_key) )
-			{
-				if (array_key_exists($p, $this->_original))
-				{
-					if ((array_key_exists('type', $properties[$p]) and $properties[$p]['type'] == 'int') or
-						(array_key_exists('data_type', $properties[$p]) and $properties[$p]['data_type'] == 'int'))
-					{
-						if ($this->{$p} != $this->_original[$p])
-						{
-							$query->set($p, $this->_data[$p] ?? null);
-						}
-					}
-					elseif ($this->{$p} !== $this->_original[$p])
-					{
-						$query->set($p, $this->_data[$p] ?? null);
-					}
-				}
-				else
-				{
-					array_key_exists($p, $this->_data) and $query->set($p, $this->_data[$p]);
-				}
-			}
-		}
+        // Set all current values
+        foreach ($properties_keys as $p) {
+            if (! in_array($p, $primary_key)) {
+                if (array_key_exists($p, $this->_original)) {
+                    if ((array_key_exists('type', $properties[$p]) and $properties[$p]['type'] == 'int') or
+                        (array_key_exists('data_type', $properties[$p]) and $properties[$p]['data_type'] == 'int')) {
+                        if ($this->{$p} != $this->_original[$p]) {
+                            $query->set($p, $this->_data[$p] ?? null);
+                        }
+                    } elseif ($this->{$p} !== $this->_original[$p]) {
+                        $query->set($p, $this->_data[$p] ?? null);
+                    }
+                } else {
+                    array_key_exists($p, $this->_data) and $query->set($p, $this->_data[$p]);
+                }
+            }
+        }
 
-		// Return false when update fails
-		if ( ! $query->update())
-		{
-			return false;
-		}
+        // Return false when update fails
+        if (! $query->update()) {
+            return false;
+        }
 
-		$this->_original = $this->_data;
-		static::$_cached_objects[static::class][static::implode_pk($this)] = $this;
+        $this->_original = $this->_data;
+        static::$_cached_objects[static::class][static::implode_pk($this)] = $this;
 
-		// update the original property on success
-		$this->observe('after_update');
+        // update the original property on success
+        $this->observe('after_update');
 
-		return true;
-	}
+        return true;
+    }
 
-	/**
-	 * Adds the primary keys in where clauses to the given query.
-	 *
-	 * @param Query $query
-	 */
-	protected function add_primary_keys_to_where($query)
-	{
-		$primary_key = static::primary_key();
-		foreach ($primary_key as $pk)
-		{
-			$query->where($pk, '=', $this->_original[$pk]);
-		}
-	}
+    /**
+     * Adds the primary keys in where clauses to the given query.
+     *
+     * @param Query $query
+     */
+    protected function add_primary_keys_to_where($query)
+    {
+        $primary_key = static::primary_key();
+        foreach ($primary_key as $pk) {
+            $query->where($pk, '=', $this->_original[$pk]);
+        }
+    }
 
     /**
      * Delete current object
@@ -1547,546 +1376,466 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      *
      * @return  Model  this instance as a new object without primary key(s)
      */
-	public function delete($cascade = null, $use_transaction = false): false|self
-	{
-		// New objects can't be deleted, neither can frozen
-		if ($this->is_new() or $this->frozen())
-		{
-			return false;
-		}
+    public function delete($cascade = null, $use_transaction = false): false|self
+    {
+        // New objects can't be deleted, neither can frozen
+        if ($this->is_new() or $this->frozen()) {
+            return false;
+        }
 
-		if ($use_transaction)
-		{
-			$db = \Database_Connection::instance(static::connection(true));
-			$db->start_transaction();
-		}
+        if ($use_transaction) {
+            $db = \Database_Connection::instance(static::connection(true));
+            $db->start_transaction();
+        }
 
-		try
-		{
-			$this->observe('before_delete');
+        try {
+            $this->observe('before_delete');
 
-			$this->freeze();
-			foreach(static::relations() as $rel_name => $rel)
-			{
-				$should_cascade = is_array($cascade) ? in_array($rel_name, $cascade) : $rel->cascade_delete;
+            $this->freeze();
+            foreach (static::relations() as $rel_name => $rel) {
+                $should_cascade = is_array($cascade) ? in_array($rel_name, $cascade) : $rel->cascade_delete;
 
-				// Give model subclasses a chance to chip in.
-				if ($should_cascade && ! $this->should_cascade_delete($rel))
-				{
-					// The function returned false so something does not want this relation to be cascade deleted
-					$should_cascade = false;
-				}
+                // Give model subclasses a chance to chip in.
+                if ($should_cascade && ! $this->should_cascade_delete($rel)) {
+                    // The function returned false so something does not want this relation to be cascade deleted
+                    $should_cascade = false;
+                }
 
-				$rel->delete($this, $this->{$rel_name}, false, $should_cascade);
-			}
-			$this->unfreeze();
+                $rel->delete($this, $this->{$rel_name}, false, $should_cascade);
+            }
+            $this->unfreeze();
 
-			// Delete the model in question
-			if ( ! $this->delete_self())
-			{
-				return false;
-			}
+            // Delete the model in question
+            if (! $this->delete_self()) {
+                return false;
+            }
 
-			$this->freeze();
-			foreach(static::relations() as $rel_name => $rel)
-			{
-				$should_cascade = is_array($cascade) ? in_array($rel_name, $cascade) : $rel->cascade_delete;
+            $this->freeze();
+            foreach (static::relations() as $rel_name => $rel) {
+                $should_cascade = is_array($cascade) ? in_array($rel_name, $cascade) : $rel->cascade_delete;
 
-				// Give model subclasses a chance to chip in.
-				if ($should_cascade && ! $this->should_cascade_delete($rel))
-				{
-					// The function returned false so something does not want this relation to be cascade deleted
-					$should_cascade = false;
-				}
+                // Give model subclasses a chance to chip in.
+                if ($should_cascade && ! $this->should_cascade_delete($rel)) {
+                    // The function returned false so something does not want this relation to be cascade deleted
+                    $should_cascade = false;
+                }
 
-				$rel->delete($this, $this->{$rel_name}, true, $should_cascade);
-			}
-			$this->unfreeze();
+                $rel->delete($this, $this->{$rel_name}, true, $should_cascade);
+            }
+            $this->unfreeze();
 
-			// Perform cleanup:
-			// remove from internal object cache, remove PK's, set to non saved object, remove db original values
-			if (array_key_exists(static::class, static::$_cached_objects)
-				and array_key_exists(static::implode_pk($this), static::$_cached_objects[static::class]))
-			{
-				unset(static::$_cached_objects[static::class][static::implode_pk($this)]);
-			}
-			foreach (static::primary_key() as $pk)
-			{
-				unset($this->_data[$pk]);
-			}
-			// remove original relations too
-			foreach(static::relations() as $rel_name => $rel)
-			{
-				$this->_original_relations[$rel_name] = $rel->singular ? null : [];
-			}
+            // Perform cleanup:
+            // remove from internal object cache, remove PK's, set to non saved object, remove db original values
+            if (array_key_exists(static::class, static::$_cached_objects)
+                and array_key_exists(static::implode_pk($this), static::$_cached_objects[static::class])) {
+                unset(static::$_cached_objects[static::class][static::implode_pk($this)]);
+            }
+            foreach (static::primary_key() as $pk) {
+                unset($this->_data[$pk]);
+            }
+            // remove original relations too
+            foreach (static::relations() as $rel_name => $rel) {
+                $this->_original_relations[$rel_name] = $rel->singular ? null : [];
+            }
 
-			$this->_is_new = true;
-			$this->_original = [];
+            $this->_is_new = true;
+            $this->_original = [];
 
-			$this->observe('after_delete');
+            $this->observe('after_delete');
 
-			$use_transaction and $db->commit_transaction();
-		}
-		catch (\Exception $e)
-		{
-			$use_transaction and $db->rollback_transaction();
-			throw $e;
-		}
+            $use_transaction and $db->commit_transaction();
+        } catch (\Exception $e) {
+            $use_transaction and $db->rollback_transaction();
+            throw $e;
+        }
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Deletes this model instance from the database.
-	 *
-	 * @return bool
-	 */
-	protected function delete_self()
-	{
-		// Create the query and limit to primary key(s)
-		$query = Query::forge(static::class, static::connection(true))->limit(1);
-		$primary_key = static::primary_key();
-		foreach ($primary_key as $pk)
-		{
-			$query->where($pk, '=', $this->{$pk});
-		}
+    /**
+     * Deletes this model instance from the database.
+     *
+     * @return bool
+     */
+    protected function delete_self()
+    {
+        // Create the query and limit to primary key(s)
+        $query = Query::forge(static::class, static::connection(true))->limit(1);
+        $primary_key = static::primary_key();
+        foreach ($primary_key as $pk) {
+            $query->where($pk, '=', $this->{$pk});
+        }
 
-		// Return success of update operation
-		return $query->delete();
-	}
+        // Return success of update operation
+        return $query->delete();
+    }
 
-	/**
-	 * Allows subclasses to more easily define if a relation can be cascade deleted or not.
-	 *
-	 * @param array $rel
-	 *
-	 * @return bool False to stop the relation from being deleted. Works the same as the cascade_delete property
-	 */
-	protected function should_cascade_delete($rel): bool
-	{
-		return true;
-	}
+    /**
+     * Allows subclasses to more easily define if a relation can be cascade deleted or not.
+     *
+     * @param array $rel
+     *
+     * @return bool False to stop the relation from being deleted. Works the same as the cascade_delete property
+     */
+    protected function should_cascade_delete($rel): bool
+    {
+        return true;
+    }
 
-	/**
-	 * Reset values to those gotten from the database
-	 */
-	public function reset(): void
-	{
-		foreach ($this->_original as $p => $val)
-		{
-			$this->_data[$p] = $val;
-		}
-	}
+    /**
+     * Reset values to those gotten from the database
+     */
+    public function reset(): void
+    {
+        foreach ($this->_original as $p => $val) {
+            $this->_data[$p] = $val;
+        }
+    }
 
-	/**
+    /**
      * Disable an observer event
      *
      * @param string event to disable
      */
     public function disable_event($event): void
-	{
-		$this->_disabled_events[$event] = true;
-	}
+    {
+        $this->_disabled_events[$event] = true;
+    }
 
-	/**
+    /**
      * Enable a defined observer
      *
      * @param string class name of the observer (including namespace)
      * @param string event to enable, or null for all events
      */
     public function enable_event($event): void
-	{
-		unset($this->_disabled_events[$event]);
-	}
+    {
+        unset($this->_disabled_events[$event]);
+    }
 
-	/**
-	 * Calls all observers for the current event
-	 *
-	 * @param  string
-	 */
-	public function observe($event): void
-	{
-		foreach (static::observers() as $observer => $settings)
-		{
-			$events = $settings['events'] ?? [];
-			if ((empty($events) or in_array($event, $events))
-				and empty($this->_disabled_events[$event]))
-			{
-				if ( ! class_exists($observer))
-				{
-					$observer_class = \Inflector::get_namespace($observer).'Observer_'.\Inflector::denamespace($observer);
-					if ( ! class_exists($observer_class))
-					{
-						throw new \UnexpectedValueException($observer);
-					}
+    /**
+     * Calls all observers for the current event
+     *
+     * @param  string
+     */
+    public function observe($event): void
+    {
+        foreach (static::observers() as $observer => $settings) {
+            $events = $settings['events'] ?? [];
+            if ((empty($events) or in_array($event, $events))
+                and empty($this->_disabled_events[$event])) {
+                if (! class_exists($observer)) {
+                    $observer_class = \Inflector::get_namespace($observer).'Observer_'.\Inflector::denamespace($observer);
+                    if (! class_exists($observer_class)) {
+                        throw new \UnexpectedValueException($observer);
+                    }
 
-					// Add the observer with the full classname for next usage
-					unset(static::$_observers_cached[$observer]);
-					static::$_observers_cached[$observer_class] = $events;
-					$observer = $observer_class;
-				}
+                    // Add the observer with the full classname for next usage
+                    unset(static::$_observers_cached[$observer]);
+                    static::$_observers_cached[$observer_class] = $events;
+                    $observer = $observer_class;
+                }
 
-				try
-				{
-					call_user_func([$observer, 'orm_notify'], $this, $event);
-				}
-				catch (\Exception $e)
-				{
-					// Unfreeze before failing
-					$this->unfreeze();
+                try {
+                    call_user_func([$observer, 'orm_notify'], $this, $event);
+                } catch (\Exception $e) {
+                    // Unfreeze before failing
+                    $this->unfreeze();
 
-					throw $e;
-				}
-			}
-		}
-	}
+                    throw $e;
+                }
+            }
+        }
+    }
 
-	/**
-	 * Compare current state with the retrieved state
-	 *
-	 * @param   string|array $property
-	 * @param   bool $observe
-	 *
-	 * @throws \OutOfBoundsException
-	 *
-	 * @return  bool
-	 */
-	public function is_changed($property = null, $observe = false)
-	{
-		$properties = static::properties();
-		$relations = static::relations();
-		$property = (array) $property ?: array_merge(array_keys($properties), array_keys($relations));
-		$simple_data_types = ['int','bool'];
+    /**
+     * Compare current state with the retrieved state
+     *
+     * @param   string|array $property
+     * @param   bool $observe
+     *
+     * @throws \OutOfBoundsException
+     *
+     * @return  bool
+     */
+    public function is_changed($property = null, $observe = false)
+    {
+        $properties = static::properties();
+        $relations = static::relations();
+        $property = (array) $property ?: array_merge(array_keys($properties), array_keys($relations));
+        $simple_data_types = ['int','bool'];
 
-		$changed = false;
+        $changed = false;
 
-		$observe and $this->observe('before_save');
+        $observe and $this->observe('before_save');
 
-		foreach ($property as $p)
-		{
-			if (isset($properties[$p]))
-			{
-				if (array_key_exists($p, $this->_original))
-				{
-					if ((array_key_exists('type', $properties[$p]) and in_array($properties[$p]['type'], $simple_data_types)) or
-						(array_key_exists('data_type', $properties[$p]) and in_array($properties[$p]['data_type'], $simple_data_types)))
-					{
-						if ($this->{$p} != $this->_original[$p])
-						{
-							$changed = true;
-							break;
-						}
-					}
-					elseif ($this->{$p} !== $this->_original[$p])
-					{
-						$changed = true;
-						break;
-					}
-				}
-				else
-				{
-					if (array_key_exists($p, $this->_data))
-					{
-						$changed = true;
-						break;
-					}
-				}
-			}
-			elseif (isset($relations[$p]))
-			{
-				if ($relations[$p]->singular)
-				{
-					if (empty($this->_original_relations[$p]) !== empty($this->_data_relations[$p])
-						or ( ! empty($this->_original_relations[$p])
-							and $this->_original_relations[$p] !== $this->_data_relations[$p]->implode_pk($this->{$p})))
-					{
-						$changed = true;
-						break;
-					}
-				}
-				else
-				{
-					if (empty($this->_original_relations[$p]))
-					{
-						if ( ! empty($this->_data_relations[$p]))
-						{
-							$changed = true;
-							break;
-						}
-						continue;
-					}
+        foreach ($property as $p) {
+            if (isset($properties[$p])) {
+                if (array_key_exists($p, $this->_original)) {
+                    if ((array_key_exists('type', $properties[$p]) and in_array($properties[$p]['type'], $simple_data_types)) or
+                        (array_key_exists('data_type', $properties[$p]) and in_array($properties[$p]['data_type'], $simple_data_types))) {
+                        if ($this->{$p} != $this->_original[$p]) {
+                            $changed = true;
+                            break;
+                        }
+                    } elseif ($this->{$p} !== $this->_original[$p]) {
+                        $changed = true;
+                        break;
+                    }
+                } else {
+                    if (array_key_exists($p, $this->_data)) {
+                        $changed = true;
+                        break;
+                    }
+                }
+            } elseif (isset($relations[$p])) {
+                if ($relations[$p]->singular) {
+                    if (empty($this->_original_relations[$p]) !== empty($this->_data_relations[$p])
+                        or (! empty($this->_original_relations[$p])
+                            and $this->_original_relations[$p] !== $this->_data_relations[$p]->implode_pk($this->{$p}))) {
+                        $changed = true;
+                        break;
+                    }
+                } else {
+                    if (empty($this->_original_relations[$p])) {
+                        if (! empty($this->_data_relations[$p])) {
+                            $changed = true;
+                            break;
+                        }
+                        continue;
+                    }
 
-					$orig_rels = $this->_original_relations[$p];
-					foreach ($this->{$p} as $rk => $r)
-					{
-						if ( ! in_array($r->implode_pk($r), $orig_rels))
-						{
-							$changed = true;
-							break;
-						}
-						unset($orig_rels[array_search($rk, $orig_rels)]);
-					}
-					if ( ! empty($orig_rels))
-					{
-						$changed = true;
-						break;
-					}
-				}
-			}
-			else
-			{
-				throw new \OutOfBoundsException('Unknown property or relation: '.$p);
-			}
-		}
+                    $orig_rels = $this->_original_relations[$p];
+                    foreach ($this->{$p} as $rk => $r) {
+                        if (! in_array($r->implode_pk($r), $orig_rels)) {
+                            $changed = true;
+                            break;
+                        }
+                        unset($orig_rels[array_search($rk, $orig_rels)]);
+                    }
+                    if (! empty($orig_rels)) {
+                        $changed = true;
+                        break;
+                    }
+                }
+            } else {
+                throw new \OutOfBoundsException('Unknown property or relation: '.$p);
+            }
+        }
 
-		$observe and $this->observe('after_load');
+        $observe and $this->observe('after_load');
 
-		return $changed;
-	}
+        return $changed;
+    }
 
-	/**
+    /**
      * Generates an array with keys new & old that contain ONLY the values that differ between the original and
      * the current unsaved model.
      * Note: relations are given as single or array of imploded pks
      */
     public function get_diff(): array
-	{
-		$diff = [0 => [], 1 => []];
-		foreach ($this->_data as $key => $val)
-		{
-			if ($this->is_changed($key))
-			{
-				$diff[0][$key] = array_key_exists($key, $this->_original) ? $this->_original[$key] : null;
-				$diff[1][$key] = $val;
-			}
-		}
-		foreach ($this->_data_relations as $key => $val)
-		{
-			$rel = static::relations($key);
-			if ($rel->singular)
-			{
-				$new_pk = empty($val) ? null : $val->implode_pk($val);
-				if (empty($this->_original_relations[$key]) !== empty($val)
-					or ( ! empty($this->_original_relations[$key]) and ! empty($val)
-						and $this->_original_relations[$key] !== $new_pk
-					))
-				{
+    {
+        $diff = [0 => [], 1 => []];
+        foreach ($this->_data as $key => $val) {
+            if ($this->is_changed($key)) {
+                $diff[0][$key] = array_key_exists($key, $this->_original) ? $this->_original[$key] : null;
+                $diff[1][$key] = $val;
+            }
+        }
+        foreach ($this->_data_relations as $key => $val) {
+            $rel = static::relations($key);
+            if ($rel->singular) {
+                $new_pk = empty($val) ? null : $val->implode_pk($val);
+                if (empty($this->_original_relations[$key]) !== empty($val)
+                    or (! empty($this->_original_relations[$key]) and ! empty($val)
+                        and $this->_original_relations[$key] !== $new_pk
+                    )) {
 
-					$diff[0][$key] = $this->_original_relations[$key] ?? null;
-					$diff[1][$key] = isset($val) ? $new_pk : null;
-				}
-			}
-			else
-			{
-				$original_pks = empty($this->_original_relations[$key]) ? [] : $this->_original_relations[$key];
-				$new_pks = [];
-				if ($val)
-				{
-					foreach ($val as $v)
-					{
-						if ( ! in_array(($new_pk = $v->implode_pk($v)), $original_pks))
-						{
-							$new_pks[] = $new_pk;
-						}
-						else
-						{
-							$original_pks = array_diff($original_pks, [$new_pk]);
-						}
-					}
-				}
-				if ( ! empty($original_pks) or ! empty($new_pks)) {
-					$diff[0][$key] = empty($original_pks) ? null : $original_pks;
-					$diff[1][$key] = empty($new_pks) ? null : $new_pks;
-				}
-			}
-		}
+                    $diff[0][$key] = $this->_original_relations[$key] ?? null;
+                    $diff[1][$key] = isset($val) ? $new_pk : null;
+                }
+            } else {
+                $original_pks = empty($this->_original_relations[$key]) ? [] : $this->_original_relations[$key];
+                $new_pks = [];
+                if ($val) {
+                    foreach ($val as $v) {
+                        if (! in_array(($new_pk = $v->implode_pk($v)), $original_pks)) {
+                            $new_pks[] = $new_pk;
+                        } else {
+                            $original_pks = array_diff($original_pks, [$new_pk]);
+                        }
+                    }
+                }
+                if (! empty($original_pks) or ! empty($new_pks)) {
+                    $diff[0][$key] = empty($original_pks) ? null : $original_pks;
+                    $diff[1][$key] = empty($new_pks) ? null : $new_pks;
+                }
+            }
+        }
 
-		return $diff;
-	}
+        return $diff;
+    }
 
-	/***
-	 * Returns whether the given relation is fetched. If no relation is
-	 *
-	 * @param string $relation Name of relation
-	 *
-	 * @return  bool
-	 */
-	public function is_fetched($relation)
-	{
-		if (static::relations($relation))
-		{
-			return array_key_exists($relation, $this->_data_relations);
-		}
+    /***
+     * Returns whether the given relation is fetched. If no relation is
+     *
+     * @param string $relation Name of relation
+     *
+     * @return  bool
+     */
+    public function is_fetched($relation)
+    {
+        if (static::relations($relation)) {
+            return array_key_exists($relation, $this->_data_relations);
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/***
-	 * Returns whether this is a saved or a new object
-	 *
-	 * @return  bool
-	 */
-	public function is_new()
-	{
-		return $this->_is_new;
-	}
+    /***
+     * Returns whether this is a saved or a new object
+     *
+     * @return  bool
+     */
+    public function is_new()
+    {
+        return $this->_is_new;
+    }
 
-	/**
-	 * Check whether the object was frozen
-	 *
-	 * @return  boolean
-	 */
-	public function frozen()
-	{
-		return $this->_frozen;
-	}
+    /**
+     * Check whether the object was frozen
+     *
+     * @return  boolean
+     */
+    public function frozen()
+    {
+        return $this->_frozen;
+    }
 
-	/**
-	 * Freeze the object to disallow changing it or saving it
-	 */
-	public function freeze(): void
-	{
-		$this->_frozen = true;
-	}
+    /**
+     * Freeze the object to disallow changing it or saving it
+     */
+    public function freeze(): void
+    {
+        $this->_frozen = true;
+    }
 
-	/**
-	 * Unfreeze the object to allow changing it or saving it again
-	 */
-	public function unfreeze(): void
-	{
-		$this->_frozen = false;
-	}
+    /**
+     * Unfreeze the object to allow changing it or saving it again
+     */
+    public function unfreeze(): void
+    {
+        $this->_frozen = false;
+    }
 
-	/**
-	 * Enable sanitization mode in the object
-	 *
-	 * @return  $this
-	 */
-	public function sanitize(): static
-	{
-		$this->_sanitization_enabled = true;
+    /**
+     * Enable sanitization mode in the object
+     *
+     * @return  $this
+     */
+    public function sanitize(): static
+    {
+        $this->_sanitization_enabled = true;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Disable sanitization mode in the object
-	 *
-	 * @return  $this
-	 */
-	public function unsanitize(): static
-	{
-		$this->_sanitization_enabled = false;
+    /**
+     * Disable sanitization mode in the object
+     *
+     * @return  $this
+     */
+    public function unsanitize(): static
+    {
+        $this->_sanitization_enabled = false;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Returns the current sanitization state of the object
-	 *
-	 * @return  bool
-	 */
-	public function sanitized()
-	{
-		return $this->_sanitization_enabled;
-	}
+    /**
+     * Returns the current sanitization state of the object
+     *
+     * @return  bool
+     */
+    public function sanitized()
+    {
+        return $this->_sanitization_enabled;
+    }
 
-	/**
-	 * Sanitizatize a data value
-	 *
-	 * @param  string  $field  Name of the property that is being sanitized
-	 * @param  mixed   $value  Value to sanitize
-	 *
-	 * @return  mixed
-	 */
-	protected function _sanitize($field, $value)
-	{
-		return \Security::clean($value, null, 'security.output_filter');
-	}
+    /**
+     * Sanitizatize a data value
+     *
+     * @param  string  $field  Name of the property that is being sanitized
+     * @param  mixed   $value  Value to sanitize
+     *
+     * @return  mixed
+     */
+    protected function _sanitize($field, $value)
+    {
+        return \Security::clean($value, null, 'security.output_filter');
+    }
 
-	/**
-	 * Method for use with Fieldset::add_model()
-	 *
-	 * @param   Fieldset     Fieldset instance to add fields to
-	 * @param   array|Model  Model instance or array for use to repopulate
-	 */
-	public static function set_form_fields($form, $instance = null): void
-	{
-		Observer_Validation::set_fields($instance instanceof static ? $instance : static::class, $form);
-		$instance and $form->populate($instance, true);
-	}
+    /**
+     * Method for use with Fieldset::add_model()
+     *
+     * @param   Fieldset     Fieldset instance to add fields to
+     * @param   array|Model  Model instance or array for use to repopulate
+     */
+    public static function set_form_fields($form, $instance = null): void
+    {
+        Observer_Validation::set_fields($instance instanceof static ? $instance : static::class, $form);
+        $instance and $form->populate($instance, true);
+    }
 
-	/**
-	 * Allow populating this object from an array, and any related objects
-	 *
-	 * @param  array  assoc array with named values to store in the object
-	 *
-	 * @return  Model  this instance as a new object without primary key(s)
-	 */
-	public function from_array(array $values): static
-	{
-		foreach($values as $property => $value)
-		{
-			if (array_key_exists($property, static::properties()))
-			{
-				if ( ! in_array($property, static::primary_key()) or ! static::$block_set_pks)
-				{
-					$this->_data[$property] = $value;
-				}
-			}
-			elseif (array_key_exists($property, static::relations()) and is_array($value))
-			{
-				$rel = static::relations($property);
-				if ( ! isset($this->_data_relations[$property]))
-				{
-					$this->_data_relations[$property] = $rel->singular ? null : [];
-				}
-				foreach($value as $id => $data)
-				{
-					if (is_array($data))
-					{
-						if (array_key_exists($id, $this->_data_relations[$property]))
-						{
-							foreach($data as $field => $contents)
-							{
-								if ($rel->singular)
-								{
-									$this->_data_relations[$property]->{$field} = $contents;
-								}
-								else
-								{
-									$this->_data_relations[$property][$id]->{$field} = $contents;
-								}
-							}
-						}
-						else
-						{
-							if ($rel->singular)
-							{
-								$this->_data_relations[$property] = call_user_func(static::relations($property)->model_to.'::forge', $data);
-							}
-							else
-							{
-								$this->_data_relations[$property][] = call_user_func(static::relations($property)->model_to.'::forge', $data);
-							}
-						}
-					}
-				}
-			}
-			elseif (property_exists($this, '_eav') and ! empty(static::$_eav))
-			{
-				$this->_set_eav($property, $value);
-			}
-			else
-			{
-				$this->_custom_data[$property] = $value;
-			}
-		}
+    /**
+     * Allow populating this object from an array, and any related objects
+     *
+     * @param  array  assoc array with named values to store in the object
+     *
+     * @return  Model  this instance as a new object without primary key(s)
+     */
+    public function from_array(array $values): static
+    {
+        foreach ($values as $property => $value) {
+            if (array_key_exists($property, static::properties())) {
+                if (! in_array($property, static::primary_key()) or ! static::$block_set_pks) {
+                    $this->_data[$property] = $value;
+                }
+            } elseif (array_key_exists($property, static::relations()) and is_array($value)) {
+                $rel = static::relations($property);
+                if (! isset($this->_data_relations[$property])) {
+                    $this->_data_relations[$property] = $rel->singular ? null : [];
+                }
+                foreach ($value as $id => $data) {
+                    if (is_array($data)) {
+                        if (array_key_exists($id, $this->_data_relations[$property])) {
+                            foreach ($data as $field => $contents) {
+                                if ($rel->singular) {
+                                    $this->_data_relations[$property]->{$field} = $contents;
+                                } else {
+                                    $this->_data_relations[$property][$id]->{$field} = $contents;
+                                }
+                            }
+                        } else {
+                            if ($rel->singular) {
+                                $this->_data_relations[$property] = call_user_func(static::relations($property)->model_to.'::forge', $data);
+                            } else {
+                                $this->_data_relations[$property][] = call_user_func(static::relations($property)->model_to.'::forge', $data);
+                            }
+                        }
+                    }
+                }
+            } elseif (property_exists($this, '_eav') and ! empty(static::$_eav)) {
+                $this->_set_eav($property, $value);
+            } else {
+                $this->_custom_data[$property] = $value;
+            }
+        }
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
+    /**
      * Allow converting this object to an array
      *
      * @param bool $custom
@@ -2096,223 +1845,187 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      * @internal param \Orm\whether $bool or not to include the custom data array
      */
     public function to_array($custom = false, $recurse = false, $eav = false): array
-	{
-		// storage for the result
-		$array = [];
+    {
+        // storage for the result
+        $array = [];
 
-		// reset the references array on first call
-		$recurse or static::$to_array_references = [static::class];
+        // reset the references array on first call
+        $recurse or static::$to_array_references = [static::class];
 
-		// make sure all data is scalar or array
-		if ($custom)
-		{
-			foreach ($this->_custom_data as $key => $val)
-			{
-				if (is_object($val))
-				{
-					if (method_exists($val, '__toString'))
-					{
-						$val = (string) $val;
-					}
-					else
-					{
-						$val = get_object_vars($val);
-					}
-				}
-				$array[$key] = $val;
-			}
-		}
+        // make sure all data is scalar or array
+        if ($custom) {
+            foreach ($this->_custom_data as $key => $val) {
+                if (is_object($val)) {
+                    if (method_exists($val, '__toString')) {
+                        $val = (string) $val;
+                    } else {
+                        $val = get_object_vars($val);
+                    }
+                }
+                $array[$key] = $val;
+            }
+        }
 
-		// make sure all data is scalar or array
-		foreach ($this->_data as $key => $val)
-		{
-			if (is_object($val))
-			{
-				if (method_exists($val, '__toString'))
-				{
-					$val = (string) $val;
-				}
-				else
-				{
-					$val = get_object_vars($val);
-				}
-			}
-			$array[$key] = $val;
-		}
+        // make sure all data is scalar or array
+        foreach ($this->_data as $key => $val) {
+            if (is_object($val)) {
+                if (method_exists($val, '__toString')) {
+                    $val = (string) $val;
+                } else {
+                    $val = get_object_vars($val);
+                }
+            }
+            $array[$key] = $val;
+        }
 
-		// convert relations
-		foreach ($this->_data_relations as $name => $rel)
-		{
-			if (is_null($rel))
-			{
-				$array[$name] = null;
-			}
-			elseif (is_array($rel))
-			{
-				$array[$name] = [];
-				if ( ! empty($rel))
-				{
-					if ( ! in_array(reset($rel)::class, static::$to_array_references))
-					{
-						static::$to_array_references[] = reset($rel)::class;
-						foreach ($rel as $id => $r)
-						{
-							$array[$name][$id] = $r->to_array($custom, true, $eav);
-						}
-						array_pop(static::$to_array_references);
-					}
-				}
-			}
-			elseif ( ! in_array($rel::class, static::$to_array_references))
-			{
-				static::$to_array_references[] = $rel::class;
-				$array[$name] = $rel->to_array($custom, true, $eav);
-				array_pop(static::$to_array_references);
-			}
-		}
+        // convert relations
+        foreach ($this->_data_relations as $name => $rel) {
+            if (is_null($rel)) {
+                $array[$name] = null;
+            } elseif (is_array($rel)) {
+                $array[$name] = [];
+                if (! empty($rel)) {
+                    if (! in_array(reset($rel)::class, static::$to_array_references)) {
+                        static::$to_array_references[] = reset($rel)::class;
+                        foreach ($rel as $id => $r) {
+                            $array[$name][$id] = $r->to_array($custom, true, $eav);
+                        }
+                        array_pop(static::$to_array_references);
+                    }
+                }
+            } elseif (! in_array($rel::class, static::$to_array_references)) {
+                static::$to_array_references[] = $rel::class;
+                $array[$name] = $rel->to_array($custom, true, $eav);
+                array_pop(static::$to_array_references);
+            }
+        }
 
-		// get eav relations
-		if ($eav and property_exists(static::class, '_eav'))
-		{
-			// loop through the defined EAV containers
-			foreach (static::$_eav as $rel => $settings)
-			{
-				// normalize the container definition, could be string or array
-				if (is_string($settings))
-				{
-					$rel = $settings;
-					$settings = [];
-				}
+        // get eav relations
+        if ($eav and property_exists(static::class, '_eav')) {
+            // loop through the defined EAV containers
+            foreach (static::$_eav as $rel => $settings) {
+                // normalize the container definition, could be string or array
+                if (is_string($settings)) {
+                    $rel = $settings;
+                    $settings = [];
+                }
 
-				// determine attribute and value column names
-				$attr = \Arr::get($settings, 'attribute', 'attribute');
-				$val  = \Arr::get($settings, 'value', 'value');
+                // determine attribute and value column names
+                $attr = \Arr::get($settings, 'attribute', 'attribute');
+                $val  = \Arr::get($settings, 'value', 'value');
 
-				// check if relation is present
-				if (array_key_exists($rel, $array))
-				{
-					// get eav properties
-					$container = \Arr::assoc_to_keyval($array[$rel], $attr, $val);
+                // check if relation is present
+                if (array_key_exists($rel, $array)) {
+                    // get eav properties
+                    $container = \Arr::assoc_to_keyval($array[$rel], $attr, $val);
 
-					// merge eav properties to array without overwritting anything
-					$array = array_merge($container, $array);
+                    // merge eav properties to array without overwritting anything
+                    $array = array_merge($container, $array);
 
-					// we don't need this relation anymore
-					unset($array[$rel]);
-				}
-			}
-		}
+                    // we don't need this relation anymore
+                    unset($array[$rel]);
+                }
+            }
+        }
 
-		// strip any excluded values from the array
-		foreach (static::get_to_array_exclude() as $key)
-		{
-			if (array_key_exists($key, $array))
-			{
-				unset($array[$key]);
-			}
-		}
+        // strip any excluded values from the array
+        foreach (static::get_to_array_exclude() as $key) {
+            if (array_key_exists($key, $array)) {
+                unset($array[$key]);
+            }
+        }
 
-		return $array;
-	}
+        return $array;
+    }
 
-	/**
+    /**
      * Provide the identifying details in the form of an array
      */
     public function get_pk_assoc(): array
-	{
-		$array = array_flip(static::primary_key());
+    {
+        $array = array_flip(static::primary_key());
 
-		foreach ($array as $key => &$value)
-		{
-			$value = $this->get($key);
-		}
+        foreach ($array as $key => &$value) {
+            $value = $this->get($key);
+        }
 
-		return $array;
-	}
+        return $array;
+    }
 
-	/**
-	 * Allow converting this object to a real object
-	 *
-	 * @return  object
-	 */
-	public function to_object($custom = false, $recurse = false): \stdClass
-	{
-		return (object) $this->to_array($custom, $recurse);
-	}
+    /**
+     * Allow converting this object to a real object
+     *
+     * @return  object
+     */
+    public function to_object($custom = false, $recurse = false): \stdClass
+    {
+        return (object) $this->to_array($custom, $recurse);
+    }
 
-	/**
-	 * EAV attribute getter. Also deals with isset() and unset()
-	 *
-	 * @param   string $attribute, the attribute value to get
-	 * @param    bool $isset, if true, do an exists check instead of returning the value
-	 * @param    bool $unset, if true, delete the EAV attribute if it exists
-	 *
-	 * @throws \OutOfBoundsException if the defined EAV relation does not exist or of the wrong type
-	 *
-	 * @return  mixed
-	 */
-	protected function _get_eav($attribute, $isset = false, $unset = false)
-	{
-		// get the current class name
-		$class = static::class;
+    /**
+     * EAV attribute getter. Also deals with isset() and unset()
+     *
+     * @param   string $attribute, the attribute value to get
+     * @param    bool $isset, if true, do an exists check instead of returning the value
+     * @param    bool $unset, if true, delete the EAV attribute if it exists
+     *
+     * @throws \OutOfBoundsException if the defined EAV relation does not exist or of the wrong type
+     *
+     * @return  mixed
+     */
+    protected function _get_eav($attribute, $isset = false, $unset = false)
+    {
+        // get the current class name
+        $class = static::class;
 
-		// don't do anything unless we actually have an EAV container
-		if (property_exists($class, '_eav'))
-		{
-			// loop through the defined EAV containers
-			foreach (static::$_eav as $rel => $settings)
-			{
-				// normalize the container definition, could be string or array
-				if (is_string($settings))
-				{
-					$rel = $settings;
-					$settings = [];
-				}
+        // don't do anything unless we actually have an EAV container
+        if (property_exists($class, '_eav')) {
+            // loop through the defined EAV containers
+            foreach (static::$_eav as $rel => $settings) {
+                // normalize the container definition, could be string or array
+                if (is_string($settings)) {
+                    $rel = $settings;
+                    $settings = [];
+                }
 
-				// fetch the relation object for this EAV container
-				if ( ! $rel = static::relations($rel))
-				{
-					throw new \OutOfBoundsException('EAV container defines a relation that does not exist in '.static::class.'.');
-				}
+                // fetch the relation object for this EAV container
+                if (! $rel = static::relations($rel)) {
+                    throw new \OutOfBoundsException('EAV container defines a relation that does not exist in '.static::class.'.');
+                }
 
-				// EAV containers must be of the "Many type"
-				if ($rel instanceOf \Orm\HasOne or $rel instanceOf \Orm\BelongsTo )
-				{
-					throw new \OutOfBoundsException('EAV containers can only be defined on "HasMany" or "ManyMany" relations in '.static::class.'.');
-				}
+                // EAV containers must be of the "Many type"
+                if ($rel instanceof \Orm\HasOne or $rel instanceof \Orm\BelongsTo) {
+                    throw new \OutOfBoundsException('EAV containers can only be defined on "HasMany" or "ManyMany" relations in '.static::class.'.');
+                }
 
-				// determine attribute and value column names
-				$attr = $settings['attribute'] ?? 'attribute';
-				$val = $settings['value'] ?? 'value';
+                // determine attribute and value column names
+                $attr = $settings['attribute'] ?? 'attribute';
+                $val = $settings['value'] ?? 'value';
 
-				// see if we have a result
-				if ($result = $this->{$rel->name})
-				{
-					// loop over the resultset
-					foreach ($result as $key => $record)
-					{
-						// check if this is the attribute we need
-						if ($record->{$attr} === $attribute)
-						{
-							if ($unset)
-							{
-								// delete the related object if we need to unset
-								unset($this->{$rel->name}[$key]);
-								$record->delete();
-								return true;
-							}
+                // see if we have a result
+                if ($result = $this->{$rel->name}) {
+                    // loop over the resultset
+                    foreach ($result as $key => $record) {
+                        // check if this is the attribute we need
+                        if ($record->{$attr} === $attribute) {
+                            if ($unset) {
+                                // delete the related object if we need to unset
+                                unset($this->{$rel->name}[$key]);
+                                $record->delete();
+                                return true;
+                            }
                             // else return its existence or its value
                             return $isset ? true : $record->{$val};
-						}
-					}
-				}
-			}
-		}
+                        }
+                    }
+                }
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
+    /**
      * EAV attribute setter
      *
      * @param   string $attribute
@@ -2321,162 +2034,146 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
      * @throws \OutOfBoundsException
      */
     protected function _set_eav($attribute, $value): bool
-	{
-		// get the current class name
-		$class = static::class;
+    {
+        // get the current class name
+        $class = static::class;
 
-		// don't do anything unless we actually have an EAV container
-		if (property_exists($class, '_eav'))
-		{
-			// loop through the defined EAV containers
-			foreach (static::$_eav as $rel => $settings)
-			{
-				// normalize the container definition, could be string or array
-				if (is_string($settings))
-				{
-					$rel = $settings;
-					$settings = [];
-				}
+        // don't do anything unless we actually have an EAV container
+        if (property_exists($class, '_eav')) {
+            // loop through the defined EAV containers
+            foreach (static::$_eav as $rel => $settings) {
+                // normalize the container definition, could be string or array
+                if (is_string($settings)) {
+                    $rel = $settings;
+                    $settings = [];
+                }
 
-				// fetch the relation object for this EAV container
-				if ( ! $relation = static::relations($rel))
-				{
-					throw new \OutOfBoundsException('EAV container defines a relation that does not exist in '.static::class.'.');
-				}
+                // fetch the relation object for this EAV container
+                if (! $relation = static::relations($rel)) {
+                    throw new \OutOfBoundsException('EAV container defines a relation that does not exist in '.static::class.'.');
+                }
 
-				// EAV containers must be of the "Many type"
-				if ($relation instanceOf \Orm\HasOne or $relation instanceOf \Orm\BelongsTo)
-				{
-					throw new \OutOfBoundsException('EAV containers can only be defined on "HasMany" or "ManyMany" relations in '.static::class.'.');
-				}
+                // EAV containers must be of the "Many type"
+                if ($relation instanceof \Orm\HasOne or $relation instanceof \Orm\BelongsTo) {
+                    throw new \OutOfBoundsException('EAV containers can only be defined on "HasMany" or "ManyMany" relations in '.static::class.'.');
+                }
 
-				// determine attribute and value column names
-				$attr = $settings['attribute'] ?? 'attribute';
-				$val = $settings['value'] ?? 'value';
+                // determine attribute and value column names
+                $attr = $settings['attribute'] ?? 'attribute';
+                $val = $settings['value'] ?? 'value';
 
-				// loop over the resultset
-				foreach ($this->{$relation->name} as $record)
-				{
-					if ($record->{$attr} === $attribute)
-					{
-						$record->{$val} = $value;
-						return true;
-					}
-				}
+                // loop over the resultset
+                foreach ($this->{$relation->name} as $record) {
+                    if ($record->{$attr} === $attribute) {
+                        $record->{$val} = $value;
+                        return true;
+                    }
+                }
 
-				// not found, we've got outselfs a new attribute, so add it
-				if ($rel = static::related_class($rel))
-				{
-					$this->{$relation->name}[] = $rel::forge([
-						$attr => $attribute,
-						$val => $value,
-					]);
-					return true;
-				}
-			}
-		}
+                // not found, we've got outselfs a new attribute, so add it
+                if ($rel = static::related_class($rel)) {
+                    $this->{$relation->name}[] = $rel::forge([
+                        $attr => $attribute,
+                        $val => $value,
+                    ]);
+                    return true;
+                }
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/***************************************************************************
-	 * Implementation of ArrayAccess
-	 **************************************************************************/
+    /***************************************************************************
+     * Implementation of ArrayAccess
+     **************************************************************************/
 
-	public function offsetSet($offset, $value)
-	{
-		try
-		{
-			$this->__set($offset, $value);
-		}
-		catch (\Exception)
-		{
-			return false;
-		}
-	}
+    public function offsetSet($offset, $value)
+    {
+        try {
+            $this->__set($offset, $value);
+        } catch (\Exception) {
+            return false;
+        }
+    }
 
-	public function offsetExists($offset)
-	{
-		return $this->__isset($offset);
-	}
+    public function offsetExists($offset)
+    {
+        return $this->__isset($offset);
+    }
 
-	public function offsetUnset($offset): void
-	{
-		$this->__unset($offset);
-	}
+    public function offsetUnset($offset): void
+    {
+        $this->__unset($offset);
+    }
 
-	public function offsetGet($offset)
-	{
-		try
-		{
-			return $this->__get($offset);
-		}
-		catch (\Exception)
-		{
-			return false;
-		}
-	}
+    public function offsetGet($offset)
+    {
+        try {
+            return $this->__get($offset);
+        } catch (\Exception) {
+            return false;
+        }
+    }
 
-	/***************************************************************************
-	 * Implementation of Iterable
-	 **************************************************************************/
+    /***************************************************************************
+     * Implementation of Iterable
+     **************************************************************************/
 
-	protected $_iterable = [];
+    protected $_iterable = [];
 
-	public function rewind(): void
-	{
-		$this->_iterable = array_merge($this->_custom_data, $this->_data, $this->_data_relations);
-		reset($this->_iterable);
-	}
+    public function rewind(): void
+    {
+        $this->_iterable = array_merge($this->_custom_data, $this->_data, $this->_data_relations);
+        reset($this->_iterable);
+    }
 
-	public function current()
-	{
-		return current($this->_iterable);
-	}
+    public function current()
+    {
+        return current($this->_iterable);
+    }
 
-	public function key()
-	{
-		return key($this->_iterable);
-	}
+    public function key()
+    {
+        return key($this->_iterable);
+    }
 
-	public function next()
-	{
-		return next($this->_iterable);
-	}
+    public function next()
+    {
+        return next($this->_iterable);
+    }
 
-	public function valid()
-	{
-		return key($this->_iterable) !== null;
-	}
+    public function valid()
+    {
+        return key($this->_iterable) !== null;
+    }
 
-	/**
-	 * Returns a list of properties that will be excluded when to_array() is used.
-	 * @return array
-	 */
-	public static function get_to_array_exclude()
-	{
-		return static::$_to_array_exclude;
-	}
+    /**
+     * Returns a list of properties that will be excluded when to_array() is used.
+     * @return array
+     */
+    public static function get_to_array_exclude()
+    {
+        return static::$_to_array_exclude;
+    }
 
-	/**
-	 * Returns a list of properties and their information with _to_array_exclude
-	 * properties removed.
-	 *
-	 * @return array
-	 */
-	public static function get_filtered_properties()
-	{
-		$array = static::properties();
+    /**
+     * Returns a list of properties and their information with _to_array_exclude
+     * properties removed.
+     *
+     * @return array
+     */
+    public static function get_filtered_properties()
+    {
+        $array = static::properties();
 
-		// strip any excluded values from the array
-		foreach (static::get_to_array_exclude() as $key)
-		{
-			if (array_key_exists($key, $array))
-			{
-				unset($array[$key]);
-			}
-		}
+        // strip any excluded values from the array
+        foreach (static::get_to_array_exclude() as $key) {
+            if (array_key_exists($key, $array)) {
+                unset($array[$key]);
+            }
+        }
 
-		return $array;
-	}
+        return $array;
+    }
 }

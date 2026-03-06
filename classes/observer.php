@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -17,39 +19,37 @@ namespace Orm;
  */
 abstract class Observer
 {
-	/**
-	 * @var	array	list of created observer instances created
-	 */
-	protected static $_instances = [];
+    /**
+     * @var	array	list of created observer instances created
+     */
+    protected static $_instances = [];
 
-	/**
-	 * Get notified of an event
-	 *
-	 * @param  Model   $instance
-	 * @param  string  $event
-	 */
-	public static function orm_notify($instance, $event): void
-	{
-		$model_class = $instance::class;
-		if (method_exists(static::instance($model_class), $event))
-		{
-			static::instance($model_class)->{$event}($instance);
-		}
-	}
+    /**
+     * Get notified of an event
+     *
+     * @param  Model   $instance
+     * @param  string  $event
+     */
+    public static function orm_notify($instance, $event): void
+    {
+        $model_class = $instance::class;
+        if (method_exists(static::instance($model_class), $event)) {
+            static::instance($model_class)->{$event}($instance);
+        }
+    }
 
-	/**
-	 * Create an instance of this observer
-	 *
-	 * @param  string  name of the model class
-	 */
-	public static function instance($model_class)
-	{
-		$observer = static::class;
-		if (empty(static::$_instances[$observer][$model_class]))
-		{
-			static::$_instances[$observer][$model_class] = new static($model_class);
-		}
+    /**
+     * Create an instance of this observer
+     *
+     * @param  string  name of the model class
+     */
+    public static function instance($model_class)
+    {
+        $observer = static::class;
+        if (empty(static::$_instances[$observer][$model_class])) {
+            static::$_instances[$observer][$model_class] = new static($model_class);
+        }
 
-		return static::$_instances[$observer][$model_class];
-	}
+        return static::$_instances[$observer][$model_class];
+    }
 }

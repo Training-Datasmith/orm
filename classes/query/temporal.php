@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -21,59 +23,57 @@ namespace Orm;
  */
 class Query_Temporal extends Query
 {
-	protected $timestamp;
-	protected $timestamp_end_col;
-	protected $timestamp_start_col;
+    protected $timestamp;
+    protected $timestamp_end_col;
+    protected $timestamp_start_col;
 
-	/**
-	 * Sets the timestamp to be used on joins. If set to null the latest revision
-	 * is used.
-	 *
-	 * @param string $stamp Timestamp to look for
-	 * @param string $timestamp_end_col Name of the end timestamp column
-	 * @param string $timestamp_start_col Name of teh start timestamp column
-	 */
-	public function set_temporal_properties(
-		$stamp,
-		$timestamp_end_col,
-		$timestamp_start_col): static
-	{
-		$this->timestamp = $stamp;
-		$this->timestamp_end_col = $timestamp_end_col;
-		$this->timestamp_start_col = $timestamp_start_col;
+    /**
+     * Sets the timestamp to be used on joins. If set to null the latest revision
+     * is used.
+     *
+     * @param string $stamp Timestamp to look for
+     * @param string $timestamp_end_col Name of the end timestamp column
+     * @param string $timestamp_start_col Name of teh start timestamp column
+     */
+    public function set_temporal_properties(
+        $stamp,
+        $timestamp_end_col,
+        $timestamp_start_col
+    ): static {
+        $this->timestamp = $stamp;
+        $this->timestamp_end_col = $timestamp_end_col;
+        $this->timestamp_start_col = $timestamp_start_col;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Adds extra where conditions when temporal filtering is needed.
-	 *
-	 * @param array $join_result
-	 * @param string $name
-	 * @return array
-	 */
-	protected function modify_join_result($join_result, $name)
-	{
-		if ( ! is_null($this->timestamp) and is_subclass_of($join_result[$name]['model'], \Orm\Model_Temporal::class))
-		{
-			//Add the needed conditions to allow for temporal-ness
-			$table      = $join_result[$name]['table'][1];
-			$query_time = \DB::escape($this->timestamp);
-			$join_result[$name]['join_on'][] = ["$table.$this->timestamp_start_col", '<=', $query_time];
-			$join_result[$name]['join_on'][] = ["$table.$this->timestamp_end_col", '>=', $query_time];
-		}
+    /**
+     * Adds extra where conditions when temporal filtering is needed.
+     *
+     * @param array $join_result
+     * @param string $name
+     * @return array
+     */
+    protected function modify_join_result($join_result, $name)
+    {
+        if (! is_null($this->timestamp) and is_subclass_of($join_result[$name]['model'], \Orm\Model_Temporal::class)) {
+            //Add the needed conditions to allow for temporal-ness
+            $table      = $join_result[$name]['table'][1];
+            $query_time = \DB::escape($this->timestamp);
+            $join_result[$name]['join_on'][] = ["$table.$this->timestamp_start_col", '<=', $query_time];
+            $join_result[$name]['join_on'][] = ["$table.$this->timestamp_end_col", '>=', $query_time];
+        }
 
-		return $join_result;
-	}
+        return $join_result;
+    }
 
-	public function hydrate(&$row, $models, \stdClass $result, $model = null, $select = null, $primary_key = null): void
-	{
-		if( is_subclass_of($model, \Orm\Model_Temporal::class))
-		{
-			$primary_key[] = $this->timestamp_start_col;
-			$primary_key[] = $this->timestamp_end_col;
-		}
-		parent::hydrate($row, $models, $result, $model, $select, $primary_key);
-	}
+    public function hydrate(&$row, $models, \stdClass $result, $model = null, $select = null, $primary_key = null): void
+    {
+        if (is_subclass_of($model, \Orm\Model_Temporal::class)) {
+            $primary_key[] = $this->timestamp_start_col;
+            $primary_key[] = $this->timestamp_end_col;
+        }
+        parent::hydrate($row, $models, $result, $model, $select, $primary_key);
+    }
 
 }
