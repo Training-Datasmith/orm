@@ -387,7 +387,7 @@ class Observer_Typing
         }
 
         foreach ($values as $val) {
-            if (! in_array($val, $settings['options'])) {
+            if (! isset($settings['options']) || ! in_array($val, $settings['options'])) {
                 throw new InvalidContentType('Invalid value given for '.ucfirst((string) $settings['data_type']).
                     ', value "'.$var.'" not in available options: "'.implode(', ', $settings['options']).'".');
             }
@@ -457,7 +457,7 @@ class Observer_Typing
      */
     public static function type_unserialize($var)
     {
-        return empty($var) ? [] : unserialize($var);
+        return empty($var) ? [] : unserialize($var, ['allowed_classes' => false]);
     }
 
     /**
@@ -500,14 +500,14 @@ class Observer_Typing
      *
      * @return  mixed
      */
-    public static function type_decrypt($var)
+    public static function type_decrypt($var, array $settings = [])
     {
-        // decrypt it
+        // decrypt and unserialize (type_encrypt serializes before encrypting)
         if (array_key_exists('encryption_key', $settings)) {
-            return \Crypt::decode($var, $settings['encryption_key']);
+            return static::type_unserialize(\Crypt::decode($var, $settings['encryption_key']));
         }
 
-        return \Crypt::decode($var);
+        return static::type_unserialize(\Crypt::decode($var));
     }
 
     /**
@@ -523,6 +523,9 @@ class Observer_Typing
     public static function type_json_encode($var, array $settings)
     {
         $var = json_encode($var);
+        if ($var === false) {
+            throw new InvalidContentType('Value could not be JSON encoded: ' . json_last_error_msg());
+        }
 
         if (array_key_exists('character_maximum_length', $settings)) {
             $length  = intval($settings['character_maximum_length']);

@@ -817,7 +817,7 @@ class Query
      * @throws \UnexpectedValueException Relation was not found in the model
      * @return  $this
      */
-    public function related(string $relation, array $conditions = []): static
+    public function related(string|array $relation, array $conditions = []): static
     {
         if (is_array($relation)) {
             foreach ($relation as $k_r => $v_r) {

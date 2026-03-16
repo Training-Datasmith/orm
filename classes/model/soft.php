@@ -234,7 +234,7 @@ class Model_Soft extends Model
                         }
                     }
                     // for hasone/belongsto relations
-                    else {
+                    elseif ($models !== null) {
                         $models->restore($cascade_restore);
                     }
 
@@ -260,7 +260,7 @@ class Model_Soft extends Model
      */
     public static function query($options = [])
     {
-        $query = Query_Soft::forge(static::class, static::connection(), $options);
+        $query = Query_Soft::forge(static::class, [static::connection(), static::connection(true)], $options);
 
         if (static::get_filter_status()) {
             //Make sure we are filtering out soft deleted items

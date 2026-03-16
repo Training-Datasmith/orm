@@ -1334,8 +1334,8 @@ class Model_Nestedset extends Model
             case 'children':
                 // get the PK's of all child objects
                 $pk = reset(static::$_primary_key);
-                $left = $this->{$left_field};
-                $right = $this->{$right_field};
+                $left = (int) $this->{$left_field};
+                $right = (int) $this->{$right_field};
 
                 // if we're multitree, add the tree filter to the query
                 if (is_null($tree_field)) {
@@ -1473,6 +1473,8 @@ class Model_Nestedset extends Model
      */
     protected function _shift_rl_values($first, $delta)
     {
+        $first = (int) $first;
+        $delta = (int) $delta;
         // get params to avoid excessive method calls
         $tree_field = static::tree_config('tree_field');
         $left_field = static::tree_config('left_field');
@@ -1562,6 +1564,10 @@ class Model_Nestedset extends Model
      */
     protected function _shift_rl_range($first, $last, $delta)
     {
+        $first = (int) $first;
+        $last = (int) $last;
+        $delta = (int) $delta;
+
         // get params to avoid excessive method calls
         $tree_field = static::tree_config('tree_field');
         $left_field = static::tree_config('left_field');

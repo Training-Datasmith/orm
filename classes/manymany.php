@@ -131,6 +131,7 @@ class ManyMany extends Relation
 
     public function select_through(string $table)
     {
+        $properties = [];
         foreach ($this->key_through_to as $to) {
             $properties[] = $table.'.'.$to;
         }

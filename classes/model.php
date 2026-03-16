@@ -1531,8 +1531,8 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
                     }
 
                     // Add the observer with the full classname for next usage
-                    unset(static::$_observers_cached[$observer]);
-                    static::$_observers_cached[$observer_class] = $events;
+                    unset(static::$_observers_cached[static::class][$observer]);
+                    static::$_observers_cached[static::class][$observer_class] = $settings;
                     $observer = $observer_class;
                 }
 

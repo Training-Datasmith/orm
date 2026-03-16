@@ -135,7 +135,7 @@ class Model_Temporal extends Model
      */
     public static function find_revision($id, $timestamp = null, $relations = [])
     {
-        if ($timestamp == null) {
+        if ($timestamp === null) {
             return parent::find($id);
         }
 
@@ -225,7 +225,7 @@ class Model_Temporal extends Model
         $timestamp_end_name = static::temporal_property('end_column');
         $max_timestamp = static::temporal_property('max_timestamp');
 
-        $query = Query_Temporal::forge(static::class, static::connection(), $options)
+        $query = Query_Temporal::forge(static::class, [static::connection(), static::connection(true)], $options)
             ->set_temporal_properties($max_timestamp, $timestamp_end_name, $timestamp_start_name);
 
         //Check if we need to add filtering
@@ -255,11 +255,11 @@ class Model_Temporal extends Model
         $timestamp_start_name = static::temporal_property('start_column');
         $max_timestamp = static::temporal_property('max_timestamp');
 
-        if ($earliestTime == null) {
+        if ($earliestTime === null) {
             $earliestTime = 0;
         }
 
-        if ($latestTime == null) {
+        if ($latestTime === null) {
             $latestTime = $max_timestamp;
         }
 
@@ -370,43 +370,46 @@ class Model_Temporal extends Model
         $this->observe('before_save');
         // then disable it so it doesn't get executed by parent::save()
         $this->disable_event('before_save');
-        $diff = $this->get_diff();
-        if (count($diff[0]) > 0) {
-            // Take a copy of this model
-            $revision = clone $this;
+        try {
+            $diff = $this->get_diff();
+            if (count($diff[0]) > 0) {
+                // Take a copy of this model
+                $revision = clone $this;
 
-            // Give that new model an end time of the current time after resetting back to the old data
-            $revision->set($this->_original);
+                // Give that new model an end time of the current time after resetting back to the old data
+                $revision->set($this->_original);
 
-            self::disable_primary_key_check();
-            $revision->{$timestamp_end_name} = $current_timestamp;
-            self::enable_primary_key_check();
+                self::disable_primary_key_check();
+                $revision->{$timestamp_end_name} = $current_timestamp;
+                self::enable_primary_key_check();
 
-            // Make sure relations stay the same
-            $revision->_original_relations = $this->_data_relations;
+                // Make sure relations stay the same
+                $revision->_original_relations = $this->_data_relations;
 
-            // save that, now we have our archive
-            self::enable_id_only_primary_key();
-            $revision_result = $revision->overwrite(false, $use_transaction);
-            self::disable_id_only_primary_key();
+                // save that, now we have our archive
+                self::enable_id_only_primary_key();
+                $revision_result = $revision->overwrite(false, $use_transaction);
+                self::disable_id_only_primary_key();
 
-            if (! $revision_result) {
-                // If the revision did not save then stop the process so the user can do something.
-                return false;
+                if (! $revision_result) {
+                    // If the revision did not save then stop the process so the user can do something.
+                    return false;
+                }
+
+                // Now that the old data is saved update the current object so its end timestamp is now
+                self::disable_primary_key_check();
+                $this->{$timestamp_start_name} = $current_timestamp;
+                self::enable_primary_key_check();
+
+                $result = parent::save($cascade, $use_transaction);
+            } else {
+                // If nothing has changed call parent::save() to insure relations are saved too
+                $result = parent::save($cascade, $use_transaction);
             }
-
-            // Now that the old data is saved update the current object so its end timestamp is now
-            self::disable_primary_key_check();
-            $this->{$timestamp_start_name} = $current_timestamp;
-            self::enable_primary_key_check();
-
-            $result = parent::save($cascade, $use_transaction);
-        } else {
-            // If nothing has changed call parent::save() to insure relations are saved too
-            $result = parent::save($cascade, $use_transaction);
+        } finally {
+            // make sure the before save event is enabled again
+            $this->enable_event('before_save');
         }
-        // make sure the before save event is enabled again
-        $this->enable_event('before_save');
         return $result;
     }
 
@@ -529,48 +532,53 @@ class Model_Temporal extends Model
 
     public function delete($cascade = null, $use_transaction = false): static
     {
-        // If we are using a transcation then make sure it's started
+        // If we are using a transaction then make sure it's started
         if ($use_transaction) {
             $db = \Database_Connection::instance(static::connection(true));
             $db->start_transaction();
         }
 
-        // Call the observers
-        $this->observe('before_delete');
+        try {
+            // Call the observers
+            $this->observe('before_delete');
 
-        // Load temporal properties.
-        $timestamp_end_name = static::temporal_property('end_column');
-        $mysql_timestamp = static::temporal_property('mysql_timestamp');
+            // Load temporal properties.
+            $timestamp_end_name = static::temporal_property('end_column');
+            $mysql_timestamp = static::temporal_property('mysql_timestamp');
 
-        // Generate the correct timestamp and save it
-        $current_timestamp = $mysql_timestamp ?
-            \Date::forge()->format('mysql') :
-            \Date::forge()->get_timestamp();
+            // Generate the correct timestamp and save it
+            $current_timestamp = $mysql_timestamp ?
+                \Date::forge()->format('mysql') :
+                \Date::forge()->get_timestamp();
 
-        static::disable_primary_key_check();
-        $this->{$timestamp_end_name} = $current_timestamp;
-        static::enable_primary_key_check();
+            static::disable_primary_key_check();
+            $this->{$timestamp_end_name} = $current_timestamp;
+            static::enable_primary_key_check();
 
-        // Loop through all relations and delete if we are cascading.
-        $this->freeze();
-        foreach ($this->relations() as $rel) {
-            // get the cascade delete status
-            $relCascade = is_null($cascade) ? $rel->cascade_delete : (bool) $cascade;
+            // Loop through all relations and delete if we are cascading.
+            $this->freeze();
+            foreach ($this->relations() as $rel) {
+                // get the cascade delete status
+                $relCascade = is_null($cascade) ? $rel->cascade_delete : (bool) $cascade;
 
-            if ($relCascade) {
-                if ($rel::class != \Orm\ManyMany::class) {
-                    // Loop through and call delete on all the models
-                    foreach ($rel->get($this) as $model) {
-                        $model->delete($cascade);
+                if ($relCascade) {
+                    if ($rel::class != \Orm\ManyMany::class) {
+                        // Loop through and call delete on all the models
+                        foreach ($rel->get($this) as $model) {
+                            $model->delete($cascade);
+                        }
                     }
                 }
             }
+            $this->unfreeze();
+
+            parent::save();
+
+            $this->observe('after_delete');
+        } catch (\Exception $e) {
+            $use_transaction and $db->rollback_transaction();
+            throw $e;
         }
-        $this->unfreeze();
-
-        parent::save();
-
-        $this->observe('after_delete');
 
         // Make sure the transaction is committed if needed
         $use_transaction and $db->commit_transaction();
