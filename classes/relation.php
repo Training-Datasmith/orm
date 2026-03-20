@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -11,7 +11,6 @@ declare(strict_types=1);
  * @copyright  2010 - 2019 Fuel Development Team
  * @link       https://fuelphp.com
  */
-
 namespace Orm;
 
 abstract class Relation
@@ -20,47 +19,38 @@ abstract class Relation
      * @var  string  name of the relationship in the model_from
      */
     protected $name;
-
     /**
      * @var  Model  classname of the parent model
      */
     protected $model_from;
-
     /**
      * @var  string  classname of the related model
      */
     protected $model_to;
-
     /**
      * @var  string  primary key of parent model
      */
     protected $key_from = ['id'];
-
     /**
      * @var  string  foreign key in related model
      */
     protected $key_to = [];
-
     /**
      * @var  array  where & order_by conditions for loading this relation
      */
     protected $conditions = [];
-
     /**
      * @var  bool  whether it's a single object or multiple
      */
     protected $singular = false;
-
     /**
      * @var  bool  whether saving this one's model_from should cascade to save model_to
      */
     protected $cascade_save = true;
-
     /**
      * @var  bool  whether deleting this one's model_from should cascade to delete model_to
      */
     protected $cascade_delete = false;
-
     /**
      * Configures the relationship
      *
@@ -69,7 +59,6 @@ abstract class Relation
      * @param  array   $config config values like model_to classname, key_from & key_to
      */
     abstract public function __construct($from, $name, array $config);
-
     /**
      * Should get the objects related to the given object by this relation
      *
@@ -77,7 +66,6 @@ abstract class Relation
      * @return  object|array
      */
     abstract public function get(Model $from);
-
     /**
      * Should get the properties as associative array with alias => property, the table alias is
      * given to be included with the property
@@ -91,13 +79,11 @@ abstract class Relation
         $i = 0;
         $properties = [];
         foreach ($props as $pk => $pv) {
-            $properties[] = [$table.'.'.$pk, $table.'_c'.$i];
+            $properties[] = [$table . '.' . $pk, $table . '_c' . $i];
             $i++;
         }
-
         return $properties;
     }
-
     /**
      * Returns tables to join and fields to select with optional additional settings like order/where
      *
@@ -108,7 +94,6 @@ abstract class Relation
      * @return  array
      */
     abstract public function join($alias_from, $rel_name, $alias_to);
-
     /**
      * Saves the current relationships and may cascade saving to model_to instances
      *
@@ -125,7 +110,6 @@ abstract class Relation
      * @return
      */
     abstract public function save($model_from, $model_to, $original_model_id, $parent_saved, $cascade);
-
     /**
      * Takes the current relations and attempts to delete them when cascading is allowed or forced
      *
@@ -135,7 +119,6 @@ abstract class Relation
      * @param  null|bool    $cascade         either uses default setting (null) or forces when true or prevents when false
      */
     abstract public function delete($model_from, $model_to, $parent_deleted, $cascade);
-
     /**
      * Allow outside access to protected properties
      *
@@ -145,13 +128,11 @@ abstract class Relation
      */
     public function __get(string $property): mixed
     {
-        if (str_starts_with($property, '_') or ! property_exists($this, $property)) {
-            throw new \FuelException('Invalid relation property: '.$property);
+        if (str_starts_with($property, '_') or !property_exists($this, $property)) {
+            throw new \Fuel_Exception('Invalid relation property: ' . $property);
         }
-
         return $this->{$property};
     }
-
     /**
      * Returns true if this relation is a singular relation. Eg, has_one not has_many
      *

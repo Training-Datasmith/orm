@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -11,19 +11,17 @@ declare(strict_types=1);
  * @copyright  2010 - 2019 Fuel Development Team
  * @link       https://fuelphp.com
  */
-
 namespace Orm;
 
 /**
  *  Exception to throw when validation failed
  */
-class ValidationFailed extends \FuelException
+class Validation_Failed extends \Fuel_Exception
 {
     /**
      * @var  Fieldset the fieldset causing this exception
      */
     protected $fieldset;
-
     /**
      * Overridden \FuelException construct to add a Fieldset instance into the exception
      *
@@ -35,10 +33,8 @@ class ValidationFailed extends \FuelException
     public function __construct($message = null, $code = 0, \Exception $previous = null, \Fieldset $fieldset = null)
     {
         parent::__construct($message, $code, $previous);
-
         $this->fieldset = $fieldset;
     }
-
     /**
      * Gets the Fieldset from this exception
      *
@@ -49,7 +45,6 @@ class ValidationFailed extends \FuelException
         return $this->fieldset;
     }
 }
-
 /**
  * Observer class to validate the properties of the model before save.
  *
@@ -70,85 +65,71 @@ class Observer_Validation extends Observer
     {
         static $_generated = [];
         static $_tabular_rows = [];
-
         $class = is_object($obj) ? $obj::class : $obj;
         if (is_null($fieldset)) {
             $fieldset = \Fieldset::instance($class);
-            if (! $fieldset) {
+            if (!$fieldset) {
                 $fieldset = \Fieldset::forge($class);
             }
         }
-
         // is our parent fieldset a tabular form set?
         $tabular_form = is_object($fieldset->parent()) ? $fieldset->parent()->get_tabular_form() : false;
-
         // don't cache tabular form fieldsets
-        if (! $tabular_form) {
-            ! array_key_exists($class, $_generated) and $_generated[$class] = [];
+        if (!$tabular_form) {
+            !array_key_exists($class, $_generated) and $_generated[$class] = [];
             if (in_array($fieldset, $_generated[$class], true)) {
                 return $fieldset;
             }
             $_generated[$class][] = $fieldset;
         }
-
         $primary_keys = is_object($obj) ? $obj->primary_key() : $class::primary_key();
         $primary_key = count($primary_keys) === 1 ? reset($primary_keys) : false;
         $properties = is_object($obj) ? $obj->properties() : $class::properties();
-
-        if ($tabular_form and $primary_key and ! is_object($obj)) {
+        if ($tabular_form and $primary_key and !is_object($obj)) {
             isset($_tabular_rows[$class]) or $_tabular_rows[$class] = 0;
         }
-
         foreach ($properties as $p => $settings) {
             if (\Arr::get($settings, 'skip', in_array($p, $primary_keys))) {
                 continue;
             }
-
             if (isset($settings['form']['options'])) {
                 foreach ($settings['form']['options'] as $key => $value) {
                     is_array($value) or $settings['form']['options'][$key] = \Lang::get($value, [], false) ?: $value;
                 }
             }
-
             // field attributes can be passed in form key
             $attributes = $settings['form'] ?? [];
             // label is either set in property setting, as part of form attributes or defaults to fieldname
             $label = $settings['label'] ?? $attributes['label'] ?? $p;
             $label = \Lang::get($label, [], false) ?: $label;
-
             // change the fieldname and label for tabular form fieldset children
             if ($tabular_form and $primary_key) {
                 if (is_object($obj)) {
-                    $p = $tabular_form.'['.$obj->{$primary_key}.']['.$p.']';
+                    $p = $tabular_form . '[' . $obj->{$primary_key} . '][' . $p . ']';
                 } else {
-                    $p = $tabular_form.'_new['.$_tabular_rows[$class].']['.$p.']';
+                    $p = $tabular_form . '_new[' . $_tabular_rows[$class] . '][' . $p . ']';
                 }
                 $label = '';
             }
-
             // create the field and add validation rules
             $field = $fieldset->add($p, $label, $attributes);
-            if (! empty($settings['validation'])) {
+            if (!empty($settings['validation'])) {
                 foreach ($settings['validation'] as $rule => $args) {
                     if (is_int($rule) and is_string($args)) {
                         $args = [$args];
                     } else {
                         array_unshift($args, $rule);
                     }
-
                     call_fuel_func_array([$field, 'add_rule'], $args);
                 }
             }
         }
-
         // increase the row counter for tabular row fieldsets
-        if ($tabular_form and $primary_key and ! is_object($obj)) {
+        if ($tabular_form and $primary_key and !is_object($obj)) {
             $_tabular_rows[$class]++;
         }
-
         return $fieldset;
     }
-
     /**
      * Execute before saving the Model
      *
@@ -160,7 +141,6 @@ class Observer_Validation extends Observer
     {
         $this->validate($obj);
     }
-
     /**
      * Execute before inserting the row in the database
      *
@@ -172,7 +152,6 @@ class Observer_Validation extends Observer
     {
         $this->validate($obj);
     }
-
     /**
      * Execute before updating the row in the database
      *
@@ -184,7 +163,6 @@ class Observer_Validation extends Observer
     {
         $this->validate($obj);
     }
-
     /**
      * Validate the model
      *
@@ -196,22 +174,18 @@ class Observer_Validation extends Observer
     {
         $fieldset = static::set_fields($obj);
         $val = $fieldset->validation();
-
         $is_new = $obj->is_new();
-
         // only allow partial validation on updates, specify the fields for updates to allow null
         $allow_partial = $is_new ? false : [];
-
         $input = [];
         foreach (array_keys($obj->properties()) as $p) {
-            if (! in_array($p, $obj->primary_key()) and ($is_new or $obj->is_changed($p))) {
+            if (!in_array($p, $obj->primary_key()) and ($is_new or $obj->is_changed($p))) {
                 $input[$p] = $obj->{$p};
                 is_array($allow_partial) and $allow_partial[] = $p;
             }
         }
-
-        if (! empty($input) and $val->run($input, $allow_partial, [$obj]) === false) {
-            throw new ValidationFailed($val->show_errors(), 0, null, $fieldset);
+        if (!empty($input) and $val->run($input, $allow_partial, [$obj]) === false) {
+            throw new Validation_Failed($val->show_errors(), 0, null, $fieldset);
         }
         foreach ($input as $k => $v) {
             $obj->{$k} = $val->validated($k);

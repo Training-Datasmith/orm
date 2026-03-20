@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -11,40 +11,34 @@ declare(strict_types=1);
  * @copyright  2010 - 2019 Fuel Development Team
  * @link       https://fuelphp.com
  */
-
 namespace Orm;
 
 /**
  * CreatedAt observer. Makes sure the created timestamp column in a Model record
  * gets a value when a new record is inserted in the database.
  */
-class Observer_CreatedAt extends Observer
+class Observer_created_At extends Observer
 {
     /**
      * @var  bool  default setting, true to use mySQL timestamp instead of UNIX timestamp
      */
     public static $mysql_timestamp = false;
-
     /**
      * @var  string  default property to set the timestamp on
      */
     public static $property = 'created_at';
-
     /**
      * @var  bool  true to use mySQL timestamp instead of UNIX timestamp
      */
     protected $_mysql_timestamp;
-
     /**
      * @var  string  property to set the timestamp on
      */
     protected $_property;
-
     /**
      * @var  string  whether to overwrite an already set timestamp
      */
     protected $_overwrite;
-
     /**
      * Set the properties for this observer instance, based on the parent model's
      * configuration or the defined defaults.
@@ -54,11 +48,10 @@ class Observer_CreatedAt extends Observer
     public function __construct($class)
     {
         $props = $class::observers(static::class);
-        $this->_mysql_timestamp  = $props['mysql_timestamp'] ?? static::$mysql_timestamp;
-        $this->_property         = $props['property'] ?? static::$property;
-        $this->_overwrite        = $props['overwrite'] ?? true;
+        $this->_mysql_timestamp = $props['mysql_timestamp'] ?? static::$mysql_timestamp;
+        $this->_property = $props['property'] ?? static::$property;
+        $this->_overwrite = $props['overwrite'] ?? true;
     }
-
     /**
      * Set the CreatedAt property to the current time.
      *

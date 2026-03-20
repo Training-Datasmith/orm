@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -11,40 +11,34 @@ declare(strict_types=1);
  * @copyright  2010 - 2019 Fuel Development Team
  * @link       https://fuelphp.com
  */
-
 namespace Orm;
 
 /**
  * UpdatedAt observer. Makes sure the updated timestamp column in a Model record
  * gets a value when a record is updated in the database.
  */
-class Observer_UpdatedAt extends Observer
+class Observer_updated_At extends Observer
 {
     /**
      * @var  bool  set true to use mySQL timestamp instead of UNIX timestamp
      */
     public static $mysql_timestamp = false;
-
     /**
      * @var  string  property to set the timestamp on
      */
     public static $property = 'updated_at';
-
     /**
      * @var  bool  true to use mySQL timestamp instead of UNIX timestamp
      */
     protected $_mysql_timestamp;
-
     /**
      * @var  string  property to set the timestamp on
      */
     protected $_property;
-
     /**
      * @var array Names of any relations that should be taken into account when checking if the model has been updated
      */
     protected $_relations;
-
     /**
      * Set the properties for this observer instance, based on the parent model's
      * configuration or the defined defaults.
@@ -54,11 +48,10 @@ class Observer_UpdatedAt extends Observer
     public function __construct($class)
     {
         $props = $class::observers(static::class);
-        $this->_mysql_timestamp  = $props['mysql_timestamp'] ?? static::$mysql_timestamp;
-        $this->_property         = $props['property'] ?? static::$property;
-        $this->_relations        = $props['relations'] ?? [];
+        $this->_mysql_timestamp = $props['mysql_timestamp'] ?? static::$mysql_timestamp;
+        $this->_property = $props['property'] ?? static::$property;
+        $this->_relations = $props['relations'] ?? [];
     }
-
     /**
      * Set the UpdatedAt property to the current time.
      *
@@ -68,7 +61,6 @@ class Observer_UpdatedAt extends Observer
     {
         $this->before_update($obj);
     }
-
     /**
      * Set the UpdatedAt property to the current time.
      *
@@ -84,15 +76,12 @@ class Observer_UpdatedAt extends Observer
                 break;
             }
         }
-
-        $objClassName = $obj::class;
-        $objProperties = $objClassName::properties();
-
-        if ($obj->is_changed(array_keys($objProperties)) or $relation_changed) {
+        $obj_class_name = $obj::class;
+        $obj_properties = $obj_class_name::properties();
+        if ($obj->is_changed(array_keys($obj_properties)) or $relation_changed) {
             $obj->{$this->_property} = $this->_mysql_timestamp ? \Date::time()->format('mysql') : \Date::time()->get_timestamp();
         }
     }
-
     /**
      * Checks to see if any models in the given relation are changed. This function is lazy so will return true as soon
      * as it finds something that has changed.
@@ -104,29 +93,24 @@ class Observer_UpdatedAt extends Observer
     {
         // Check that the relation exists
         if ($obj->relations($relation) === false) {
-            throw new \InvalidArgumentException('Unknown relation '.$relation);
+            throw new \InvalidArgumentException('Unknown relation ' . $relation);
         }
-
         // If the relation is not loaded then ignore it.
-        if (! $obj->is_fetched($relation)) {
+        if (!$obj->is_fetched($relation)) {
             return false;
         }
-
         $relation_object = $obj->relations($relation);
-
         // Check if whe have a singular relation
         if ($relation_object->is_singular()) {
             // If so check that one model
             return $obj->{$relation}->is_changed();
         }
-
         // Else we have an array of related objects so start checking them all
         foreach ($obj->{$relation} as $related_model) {
             if ($related_model->is_changed()) {
                 return true;
             }
         }
-
         return false;
     }
 }

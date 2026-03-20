@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -11,35 +11,25 @@ declare(strict_types=1);
  * @copyright  2010 - 2019 Fuel Development Team
  * @link       https://fuelphp.com
  */
-
 namespace Orm;
 
-class HasMany extends Relation
+class Has_Many extends Relation
 {
     public function __construct($from, $name, array $config)
     {
-        $this->name        = $name;
-        $this->model_from  = $from;
-        $this->model_to    = array_key_exists('model_to', $config)
-            ? $config['model_to'] : \Inflector::get_namespace($from).'Model_'.\Inflector::classify($name);
-        $this->key_from    = array_key_exists('key_from', $config)
-            ? (array) $config['key_from'] : $this->key_from;
-        $this->key_to      = array_key_exists('key_to', $config)
-            ? (array) $config['key_to'] : (array) \Inflector::foreign_key($this->model_from);
-        $this->conditions  = array_key_exists('conditions', $config)
-            ? (array) $config['conditions'] : [];
-
-        $this->cascade_save    = array_key_exists('cascade_save', $config)
-            ? $config['cascade_save'] : $this->cascade_save;
-        $this->cascade_delete  = array_key_exists('cascade_delete', $config)
-            ? $config['cascade_delete'] : $this->cascade_delete;
-
-        if (! class_exists($this->model_to)) {
-            throw new \FuelException('Related model not found by Has_Many relation "'.$this->name.'": '.$this->model_to);
+        $this->name = $name;
+        $this->model_from = $from;
+        $this->model_to = array_key_exists('model_to', $config) ? $config['model_to'] : \Inflector::get_namespace($from) . 'Model_' . \Inflector::classify($name);
+        $this->key_from = array_key_exists('key_from', $config) ? (array) $config['key_from'] : $this->key_from;
+        $this->key_to = array_key_exists('key_to', $config) ? (array) $config['key_to'] : (array) \Inflector::foreign_key($this->model_from);
+        $this->conditions = array_key_exists('conditions', $config) ? (array) $config['conditions'] : [];
+        $this->cascade_save = array_key_exists('cascade_save', $config) ? $config['cascade_save'] : $this->cascade_save;
+        $this->cascade_delete = array_key_exists('cascade_delete', $config) ? $config['cascade_delete'] : $this->cascade_delete;
+        if (!class_exists($this->model_to)) {
+            throw new \Fuel_Exception('Related model not found by Has_Many relation "' . $this->name . '": ' . $this->model_to);
         }
         $this->model_to = get_real_class($this->model_to);
     }
-
     public function get(Model $from, array $conditions = [])
     {
         $query = call_user_func([$this->model_to, 'query']);
@@ -52,10 +42,8 @@ class HasMany extends Relation
             $query->where(current($this->key_to), $from->{$key});
             next($this->key_to);
         }
-
         $conditions = \Arr::merge($this->conditions, $conditions);
         $query->_parse_where_array(\Arr::get($conditions, 'where', []));
-
         foreach (\Arr::get($conditions, 'order_by', []) as $field => $direction) {
             if (is_numeric($field)) {
                 $query->order_by($direction);
@@ -63,74 +51,53 @@ class HasMany extends Relation
                 $query->order_by($field, $direction);
             }
         }
-
         return $query->get();
     }
-
     public function join($alias_from, $rel_name, $alias_to_nr, $conditions = []): array
     {
-        $alias_to = 't'.$alias_to_nr;
-        $model = [
-            'model'        => $this->model_to,
-            'connection'   => call_user_func([$this->model_to, 'connection']),
-            'table'        => [call_user_func([$this->model_to, 'table']), $alias_to],
-            'primary_key'  => call_user_func([$this->model_to, 'primary_key']),
-            'join_type'    => \Arr::get($conditions, 'join_type') ?: \Arr::get($this->conditions, 'join_type', 'left'),
-            'join_on'      => [],
-            'columns'      => $this->select($alias_to),
-            'rel_name'     => strpos((string) $rel_name, '.') ? substr((string) $rel_name, strrpos((string) $rel_name, '.') + 1) : $rel_name,
-            'relation'     => $this,
-            'where'        => \Arr::get($conditions, 'where', []),
-            'order_by'     => \Arr::get($conditions, 'order_by') ?: \Arr::get($this->conditions, 'order_by', []),
-        ];
-
+        $alias_to = 't' . $alias_to_nr;
+        $model = ['model' => $this->model_to, 'connection' => call_user_func([$this->model_to, 'connection']), 'table' => [call_user_func([$this->model_to, 'table']), $alias_to], 'primary_key' => call_user_func([$this->model_to, 'primary_key']), 'join_type' => \Arr::get($conditions, 'join_type') ?: \Arr::get($this->conditions, 'join_type', 'left'), 'join_on' => [], 'columns' => $this->select($alias_to), 'rel_name' => strpos((string) $rel_name, '.') ? substr((string) $rel_name, strrpos((string) $rel_name, '.') + 1) : $rel_name, 'relation' => $this, 'where' => \Arr::get($conditions, 'where', []), 'order_by' => \Arr::get($conditions, 'order_by') ?: \Arr::get($this->conditions, 'order_by', [])];
         reset($this->key_to);
         foreach ($this->key_from as $key) {
-            $model['join_on'][] = [$alias_from.'.'.$key, '=', $alias_to.'.'.current($this->key_to)];
+            $model['join_on'][] = [$alias_from . '.' . $key, '=', $alias_to . '.' . current($this->key_to)];
             next($this->key_to);
         }
         foreach ([\Arr::get($this->conditions, 'where', []), \Arr::get($conditions, 'join_on', [])] as $c) {
             foreach ($c as $key => $condition) {
-                ! is_array($condition) and $condition = [$key, '=', $condition];
-                if (! $condition[0] instanceof \Fuel\Core\Database_Expression and !str_contains((string) $condition[0], '.')) {
-                    $condition[0] = $alias_to.'.'.$condition[0];
+                !is_array($condition) and $condition = [$key, '=', $condition];
+                if (!$condition[0] instanceof \Fuel\Core\Database_Expression and !str_contains((string) $condition[0], '.')) {
+                    $condition[0] = $alias_to . '.' . $condition[0];
                 }
-                if (count($condition) == 2) { // From Query::_where()
+                if (count($condition) == 2) {
+                    // From Query::_where()
                     $condition = [$condition[0], '=', $condition[1]];
                 }
                 is_string($condition[2]) and $condition[2] = \Db::quote($condition[2], $model['connection']);
-
                 $model['join_on'][] = $condition;
             }
         }
-
         return [$rel_name => $model];
     }
-
     public function save($model_from, $models_to, $original_model_ids, $parent_saved, $cascade): void
     {
-        if (! $parent_saved) {
+        if (!$parent_saved) {
             return;
         }
-
-        if (! is_array($models_to) and ($models_to = is_null($models_to) ? [] : $models_to) !== []) {
-            throw new \FuelException('Assigned relationships must be an array or null, given relationship value for '.
-                $this->name.' is invalid.');
+        if (!is_array($models_to) and ($models_to = is_null($models_to) ? [] : $models_to) !== []) {
+            throw new \Fuel_Exception('Assigned relationships must be an array or null, given relationship value for ' . $this->name . ' is invalid.');
         }
         $original_model_ids === null and $original_model_ids = [];
-
         foreach ($models_to as $key => $model_to) {
-            if (! $model_to instanceof $this->model_to) {
-                throw new \FuelException('Invalid Model instance added to relations in this model.');
+            if (!$model_to instanceof $this->model_to) {
+                throw new \Fuel_Exception('Invalid Model instance added to relations in this model.');
             }
-
-            $current_model_id = ($model_to and ! $model_to->is_new()) ? $model_to->implode_pk($model_to) : null;
-
+            $current_model_id = ($model_to and !$model_to->is_new()) ? $model_to->implode_pk($model_to) : null;
             // Check if the model was already assigned
-            if (($model_to and $model_to->is_new()) or ! in_array($current_model_id, $original_model_ids)) {
+            if ($model_to and $model_to->is_new() or !in_array($current_model_id, $original_model_ids)) {
                 // assign this object to the new objects foreign keys
                 reset($this->key_to);
-                $frozen = $model_to->frozen(); // only unfreeze/refreeze when it was frozen
+                $frozen = $model_to->frozen();
+                // only unfreeze/refreeze when it was frozen
                 $frozen and $model_to->unfreeze();
                 foreach ($this->key_from as $pk) {
                     $model_to->{current($this->key_to)} = $model_from->{$pk};
@@ -138,12 +105,9 @@ class HasMany extends Relation
                 }
                 $model_to->is_new() and $model_to->save(false);
                 $frozen and $model_to->freeze();
-            }
-            // check if the model_to's foreign_keys match the model_from's primary keys
-            else {
+            } else {
                 // unset current model from from array
                 unset($original_model_ids[array_search($current_model_id, $original_model_ids)]);
-
                 // check if model_to still refers to this model_from
                 $changed = false;
                 reset($this->key_to);
@@ -153,7 +117,6 @@ class HasMany extends Relation
                     }
                     next($this->key_to);
                 }
-
                 // if any of the keys changed, the relationship was broken - remove model_to from loaded objects
                 if ($changed) {
                     $model_from->unfreeze();
@@ -161,17 +124,15 @@ class HasMany extends Relation
                     unset($rel[$this->name][$key]);
                     $model_from->_relate($rel);
                     $model_from->freeze();
-
                     // cascading this change won't work here, save just the object with cascading switched off
                     $model_from->save(false);
                 }
             }
-
             // Fix it if key isn't an imploded PK
-            if ($key != ($current_model_id = $model_to->implode_pk($model_to))) {
+            if ($key != $current_model_id = $model_to->implode_pk($model_to)) {
                 $model_from->unfreeze();
                 $rel = $model_from->_relate();
-                if (! empty($rel[$this->name][$key]) and $rel[$this->name][$key] === $model_to) {
+                if (!empty($rel[$this->name][$key]) and $rel[$this->name][$key] === $model_to) {
                     unset($rel[$this->name][$key]);
                 }
                 $rel[$this->name][$current_model_id] = $model_to;
@@ -179,54 +140,45 @@ class HasMany extends Relation
                 $model_from->freeze();
             }
         }
-
         // if any original ids are left over in the array, they're no longer related - break them
         foreach ($original_model_ids as $original_model_id) {
             // if still loaded set this object's old relation's foreign keys to null
-            if ($original_model_id and $obj = call_user_func(
-                [$this->model_to, 'find'],
-                count($this->key_to) == 1 ? [$original_model_id] : explode('][', substr((string) $original_model_id, 1, -1))
-            )) {
-                $frozen = $obj->frozen(); // only unfreeze/refreeze when it was frozen
+            if ($original_model_id and $obj = call_user_func([$this->model_to, 'find'], count($this->key_to) == 1 ? [$original_model_id] : explode('][', substr((string) $original_model_id, 1, -1)))) {
+                $frozen = $obj->frozen();
+                // only unfreeze/refreeze when it was frozen
                 $frozen and $obj->unfreeze();
                 foreach ($this->key_to as $fk) {
                     $obj->{$fk} = null;
                 }
                 $frozen and $obj->freeze();
-
                 // cascading this change won't work here, save just the object with cascading switched off
                 $obj->save(false);
             }
         }
-
         $cascade = is_null($cascade) ? $this->cascade_save : (bool) $cascade;
-        if ($cascade and ! empty($models_to)) {
+        if ($cascade and !empty($models_to)) {
             foreach ($models_to as $m) {
                 $m->save();
             }
         }
     }
-
     public function delete($model_from, $models_to, $parent_deleted, $cascade): void
     {
-        if (! $parent_deleted) {
+        if (!$parent_deleted) {
             return;
         }
-
         // break current relations
         $model_from->unfreeze();
         $rels = $model_from->_relate();
         $rels[$this->name] = [];
         $model_from->_relate($rels);
         $model_from->freeze();
-
-        if (! empty($models_to)) {
+        if (!empty($models_to)) {
             $cascade = is_null($cascade) ? $this->cascade_delete : (bool) $cascade;
-
             foreach ($models_to as $m) {
                 if ($cascade) {
                     $m->delete();
-                } elseif (! $m->frozen()) {
+                } elseif (!$m->frozen()) {
                     foreach ($this->key_to as $fk) {
                         $m->{$fk} = null;
                     }

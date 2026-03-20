@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * Fuel is a fast, lightweight, community driven PHP 5.4+ framework.
  *
@@ -11,7 +11,6 @@ declare(strict_types=1);
  * @copyright  2010 - 2019 Fuel Development Team
  * @link       https://fuelphp.com
  */
-
 namespace Orm;
 
 /**
@@ -23,52 +22,42 @@ class Observer_Slug extends Observer
      * @var  mixed  Default source property or array of properties, which is/are used to create the slug
      */
     public static $source = 'title';
-
     /**
      * @var  string  Default slug property
      */
     public static $property = 'slug';
-
     /**
      * @var  string  Default separator
      */
     public static $separator = '-';
-
     /**
-    * @var  bool  Required to be unique
-    */
+     * @var  bool  Required to be unique
+     */
     public static $unique = true;
-
     /**
-    * @var  bool  Required to be overwritten
-    */
+     * @var  bool  Required to be overwritten
+     */
     public static $overwrite = true;
-
     /**
      * @var  mixed  Source property or array of properties, which is/are used to create the slug
      */
     protected $_source;
-
     /**
      * @var  string  Slug property
      */
     protected $_property;
-
     /**
      * @var  string  Slug separator
      */
     protected $_separator;
-
     /**
-    * @var  bool  If the slug is required to be unique
-    */
+     * @var  bool  If the slug is required to be unique
+     */
     protected $_unique;
-
     /**
-    * @var  bool  If the slug can be manually assigned
-    */
+     * @var  bool  If the slug can be manually assigned
+     */
     protected $_overwrite;
-
     /**
      * Set the properties for this observer instance, based on the parent model's
      * configuration or the defined defaults.
@@ -78,13 +67,12 @@ class Observer_Slug extends Observer
     public function __construct($class)
     {
         $props = $class::observers(static::class);
-        $this->_source    = $props['source'] ?? static::$source;
-        $this->_property  = $props['property'] ?? static::$property;
+        $this->_source = $props['source'] ?? static::$source;
+        $this->_property = $props['property'] ?? static::$property;
         $this->_separator = $props['separator'] ?? static::$separator;
-        $this->_unique    = isset($props['unique']) ? (bool) $props['unique'] : static::$unique;
+        $this->_unique = isset($props['unique']) ? (bool) $props['unique'] : static::$unique;
         $this->_overwrite = isset($props['overwrite']) ? (bool) $props['overwrite'] : static::$overwrite;
     }
-
     /**
      * Creates a slug (unique by default) and adds it to the object
      *
@@ -95,76 +83,61 @@ class Observer_Slug extends Observer
         // slug should be overwritten if it is enabled to be or there is no manually assigned value
         $overwrite = $this->_overwrite === true || empty($obj->{$this->_property});
         $slug = $obj->{$this->_property};
-
         // is this a soft model?
         if ($obj instanceof Model_Soft) {
             $class = $obj::class;
-
             $class::disable_filter();
         }
-
         // query to check for existence of this slug
         $query = $obj->query();
-
         // only determine the slug if it should be overwritten
         // fill the query with appropriate where condition
         if ($overwrite === true) {
             $properties = (array) $this->_source;
             $source = '';
             foreach ($properties as $property) {
-                $source .= $this->_separator.$obj->{$property};
+                $source .= $this->_separator . $obj->{$property};
             }
             $slug = \Inflector::friendly_title(substr($source, 1), $this->_separator, true);
-
-            $query->where($this->_property, 'like', $slug.'%');
+            $query->where($this->_property, 'like', $slug . '%');
         } else {
             $query->where($this->_property, $slug);
         }
-
         if ($this->_unique === true) {
             // query to check for existence of this slug
-            $query = $obj->query()->where($this->_property, 'like', $slug.'%');
-
+            $query = $obj->query()->where($this->_property, 'like', $slug . '%');
             // is this a temporal model?
             if ($obj instanceof Model_Temporal) {
                 // add a filter to only check current revisions excluding the current object
                 $class = $obj::class;
                 $query->where($class::temporal_property('end_column'), '=', $class::temporal_property('max_timestamp'));
-                foreach ($class::getNonTimestampPks() as $key) {
+                foreach ($class::get_non_timestamp_pks() as $key) {
                     $query->where($key, '!=', $obj->{$key});
                 }
             }
-
             // do we have records with this slug?
             $same = $query->get();
-
             // is this a soft model?
             if ($obj instanceof Model_Soft) {
                 $class::enable_filter();
             }
-
             // make sure our slug is unique
-            if (! empty($same)) {
+            if (!empty($same)) {
                 if ($overwrite === false) {
-                    throw new \FuelException('Slug ' . $slug . ' already exists.');
+                    throw new \Fuel_Exception('Slug ' . $slug . ' already exists.');
                 }
-
                 $max = -1;
-
                 foreach ($same as $record) {
-                    if (preg_match('/^'.preg_quote($slug, '/').'(?:-([0-9]+))?$/', (string) $record->{$this->_property}, $matches)) {
+                    if (preg_match('/^' . preg_quote($slug, '/') . '(?:-([0-9]+))?$/', (string) $record->{$this->_property}, $matches)) {
                         $index = isset($matches[1]) ? (int) $matches[1] : 0;
                         $max < $index and $max = $index;
                     }
                 }
-
-                $max < 0 or $slug .= $this->_separator.($max + 1);
+                $max < 0 or $slug .= $this->_separator . ($max + 1);
             }
         }
-
         $obj->{$this->_property} = $slug;
     }
-
     /**
      * Creates a new slug (unique by default) and update the object
      *
@@ -176,21 +149,17 @@ class Observer_Slug extends Observer
         $properties = (array) $this->_source;
         $source = '';
         foreach ($properties as $property) {
-            $source .= $this->_separator.$obj->{$property};
+            $source .= $this->_separator . $obj->{$property};
         }
         $slug = \Inflector::friendly_title(substr($source, 1), $this->_separator, true);
-
         // update it if it's different from the current one
         // and is not manually assigned
         if ($obj->{$this->_property} !== $slug) {
             $overwrite = $this->_overwrite;
-
-            if ($overwrite === false and ! $obj->is_changed($this->_property)) {
+            if ($overwrite === false and !$obj->is_changed($this->_property)) {
                 $this->_overwrite = true;
             }
-
             $this->before_insert($obj);
-
             $this->_overwrite = $overwrite;
         }
     }
