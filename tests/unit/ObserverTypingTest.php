@@ -105,11 +105,13 @@ class ObserverTypingTest extends OrmTestCase
 
 	public function testEncryptCustomKeyRoundtrip(): void
 	{
-		$data = array('token' => 'abc');
+		$data = array('orm_custom_key_probe' => 'typing-roundtrip-only-with-field-key');
 		$m = $this->saveModel(Ormtest_Typing_All::forge(array('secret' => $data)));
 		$loaded = Ormtest_Typing_All::find($m->id);
 		$this->assertNotNull($loaded);
-		$this->assertSame(serialize($data), $loaded->secret);
+		$ciphertext = (string) \DB::select('secret')->from('typing_all')->where('id', $m->id)->execute()->get('secret');
+		$wrongKey = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+		$this->assertCustomEncryptionKeyRoundtrip($data, $loaded->secret, $ciphertext, $wrongKey);
 	}
 
 	public function testOrmNotifySkipsPrimaryKey(): void

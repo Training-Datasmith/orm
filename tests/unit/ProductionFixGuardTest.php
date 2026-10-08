@@ -65,13 +65,20 @@ class ProductionFixGuardTest extends OrmTestCase
 		$this->assertNull($m->label);
 	}
 
-	/** Fix 2: type_decrypt accepts per-field encryption_key settings (decrypted serialized string only) */
+	/** Fix 2: type_decrypt accepts per-field encryption_key settings */
 	public function testFix2DecryptUsesCustomEncryptionKey(): void
 	{
 		\DB::query('CREATE TABLE guard_encrypt (id INTEGER PRIMARY KEY, secret TEXT)')->execute();
-		$payload = array('a' => 1);
+		$payload = array('orm_custom_key_probe' => 'guard-fix2-only-with-field-key');
 		$m = $this->saveModel(Ormtest_Guard_Encrypt::forge(array('secret' => $payload)));
-		$this->assertSame(serialize($payload), Ormtest_Guard_Encrypt::find($m->id)->secret);
+		$ciphertext = (string) \DB::select('secret')->from('guard_encrypt')->where('id', $m->id)->execute()->get('secret');
+		$wrongKey = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+		$this->assertCustomEncryptionKeyRoundtrip(
+			$payload,
+			Ormtest_Guard_Encrypt::find($m->id)->secret,
+			$ciphertext,
+			$wrongKey
+		);
 	}
 
 	/** Fix 3: is_parent() detects many_many pivot rows */

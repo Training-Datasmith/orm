@@ -132,4 +132,31 @@ abstract class OrmTestCase extends \PHPUnit\Framework\TestCase
 		$this->assertGreaterThanOrEqual(time() - 5, $value);
 		$this->assertLessThanOrEqual(time() + 5, $value);
 	}
+
+	/**
+	 * Normalize encrypt field value after load (string ciphertext payload or already unserialized).
+	 *
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	protected function normalizeEncryptFieldValue($value)
+	{
+		return is_string($value) ? unserialize($value) : $value;
+	}
+
+	/**
+	 * Assert custom-key decrypt matches original and ciphertext does not decode with a wrong key.
+	 *
+	 * @param mixed $expected
+	 * @param mixed $loadedFieldValue
+	 * @param string $ciphertext
+	 * @param string $wrongKey
+	 */
+	protected function assertCustomEncryptionKeyRoundtrip($expected, $loadedFieldValue, $ciphertext, $wrongKey): void
+	{
+		$this->assertSame($expected, $this->normalizeEncryptFieldValue($loadedFieldValue));
+		$badPlain = \Crypt::decode($ciphertext, $wrongKey);
+		$badValue = is_string($badPlain) ? @unserialize($badPlain) : $badPlain;
+		$this->assertNotSame($expected, $badValue);
+	}
 }
