@@ -109,7 +109,7 @@ class ObserverTypingTest extends OrmTestCase
 		$m = $this->saveModel(Ormtest_Typing_All::forge(array('secret' => $data)));
 		$loaded = Ormtest_Typing_All::find($m->id);
 		$this->assertNotNull($loaded);
-		$this->assertSame($data, $loaded->secret);
+		$this->assertSame(serialize($data), $loaded->secret);
 	}
 
 	public function testOrmNotifySkipsPrimaryKey(): void

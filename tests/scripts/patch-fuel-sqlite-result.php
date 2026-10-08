@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Fuel PDO SQLite SELECT rowCount() is always 0; patch the vendored core copy used by tests.
+ * Fuel PDO SQLite SELECT rowCount() is unreliable; patch the vendored core copy used by tests.
  */
 
 $coreRoot = dirname(__DIR__).'/fuel/core';
@@ -14,7 +14,7 @@ if ( ! is_file($target))
 }
 
 $contents = file_get_contents($target);
-$marker = 'SQLite PDO reports rowCount() = 0 for SELECT';
+$marker = 'SQLite PDO rowCount()/fetch() are unreliable for SELECT; prefetch in tests';
 if (strpos($contents, $marker) !== false)
 {
 	exit(0);

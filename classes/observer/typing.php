@@ -575,7 +575,7 @@ class Observer_Typing
 			$var = \Crypt::decode($var);
 		}
 
-		return static::type_unserialize($var, $settings);
+		return $var;
 	}
 
 	/**

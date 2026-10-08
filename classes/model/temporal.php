@@ -203,9 +203,7 @@ class Model_Temporal extends Model
 			return $result;
 		}
 
-		$result =& parent::get($property, $conditions);
-
-		return $result;
+		return parent::get($property, $conditions);
 	}
 
 	/**
