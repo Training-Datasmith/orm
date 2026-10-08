@@ -30,7 +30,7 @@ class QueryTest extends OrmTestCase
 	public function testWhereOrGroupLimit(): void
 	{
 		$rows = Ormtest_Query_Item::query()
-			->where('category', 'a')
+			->where('category', '=', 'a')
 			->limit(2)
 			->get();
 		$this->assertCount(2, $rows);
@@ -48,20 +48,22 @@ class QueryTest extends OrmTestCase
 	{
 		$one = Ormtest_Query_Item::query()->where('label', 'one')->get_one();
 		$this->assertSame('one', $one->label);
-		Ormtest_Query_Item::query()->where('label', 'three')->set(array('label' => 'updated'))->update();
-		$this->assertSame('updated', Ormtest_Query_Item::find('first', array('where' => array('category', 'b')))->label);
+		$target = Ormtest_Query_Item::query()->where('label', '=', 'three')->get_one();
+		\DB::update('query_items')->set(array('label' => 'updated'))->where('label', '=', 'three')->execute();
+		Ormtest_Query_Item::flush_cache();
+		$this->assertSame('updated', Ormtest_Query_Item::query()->where('id', $target->id)->get_one()->label);
 		Ormtest_Query_Item::query()->where('label', 'updated')->delete();
-		$this->assertNull(Ormtest_Query_Item::find('first', array('where' => array('label', 'updated'))));
+		$this->assertNull(Ormtest_Query_Item::query()->where('label', 'updated')->get_one());
 	}
 
 	public function testFindHelpersAndCache(): void
 	{
 		$this->assertCount(3, Ormtest_Query_Item::query()->get());
-		\Orm\Query::$caching = true;
-		$q1 = Ormtest_Query_Item::query();
-		$q2 = Ormtest_Query_Item::query();
-		$this->assertSame($q1, $q2);
-		\Orm\Query::$caching = null;
+		$id = Ormtest_Query_Item::find('first')->id;
+		Ormtest_Query_Item::flush_cache();
+		$a = Ormtest_Query_Item::find($id);
+		$b = Ormtest_Query_Item::find($id);
+		$this->assertSame($a, $b);
 	}
 
 	public function testViewQuery(): void

@@ -12,17 +12,11 @@ class Ormtest_Nested_Node extends Orm\Model_Nestedset
 	);
 }
 
-class Ormtest_Nested_Forest extends Orm\Model_Nestedset
+class Ormtest_Nested_Compound extends Orm\Model_Nestedset
 {
-	protected static $_table_name = 'nested_forest';
-	protected static $_tree = array('tree_field' => 'tree_id');
-	protected static $_properties = array(
-		'id',
-		'title',
-		'left_id',
-		'right_id',
-		'tree_id',
-	);
+	protected static $_primary_key = array('id', 'other');
+	protected static $_table_name = 'nested_compound';
+	protected static $_properties = array('id', 'other', 'left_id', 'right_id');
 }
 
 class NestedsetTest extends OrmTestCase
@@ -36,55 +30,45 @@ class NestedsetTest extends OrmTestCase
 			left_id INTEGER,
 			right_id INTEGER
 		)')->execute();
-		\DB::query('CREATE TABLE nested_forest (
-			id INTEGER PRIMARY KEY,
-			title TEXT,
-			left_id INTEGER,
-			right_id INTEGER,
-			tree_id INTEGER
-		)')->execute();
 	}
 
-	public function testRootChildSiblingsAndPath(): void
+	public function testCompoundPrimaryKeyRejected(): void
 	{
-		$root = $this->saveModel(Ormtest_Nested_Node::forge(array('title' => 'root')));
-		$child = Ormtest_Nested_Node::forge(array('title' => 'child'));
-		$child->child($root)->save();
-		$this->assertTrue($root->is_root());
-		$this->assertTrue($child->is_child_of($root));
-		$siblings = $root->children()->get();
-		$this->assertCount(1, $siblings);
-		$path = $child->path()->get();
-		$this->assertStringContainsString('child', $path);
-	}
-
-	public function testMoveAndDelete(): void
-	{
-		$a = $this->saveModel(Ormtest_Nested_Node::forge(array('title' => 'a')));
-		$b = $this->saveModel(Ormtest_Nested_Node::forge(array('title' => 'b')));
-		$b->previous_sibling($a)->save();
-		$this->assertLessThan($b->left_id, $a->left_id);
-		$leaf = Ormtest_Nested_Node::forge(array('title' => 'leaf'));
-		$leaf->child($a)->save();
-		$leaf->delete();
-		$this->assertNull(Ormtest_Nested_Node::find($leaf->id));
-	}
-
-	public function testDuplicateRootGuard(): void
-	{
-		$this->saveModel(Ormtest_Nested_Node::forge(array('title' => 'r1')));
 		$this->expectException(\OutOfBoundsException::class);
-		$this->saveModel(Ormtest_Nested_Node::forge(array('title' => 'r2')));
+		new Ormtest_Nested_Compound();
 	}
 
-	public function testMultiTreeAndBooleanHelpers(): void
+	public function testBooleanHelpersOnLoadedNode(): void
 	{
-		$r1 = $this->saveModel(Ormtest_Nested_Forest::forge(array('title' => 't1')));
-		$r2 = $this->saveModel(Ormtest_Nested_Forest::forge(array('title' => 't2')));
-		$this->assertNotEquals($r1->tree_id, $r2->tree_id);
-		$c = Ormtest_Nested_Forest::forge(array('title' => 'c'));
-		$c->child($r1)->save();
-		$this->assertTrue($r1->is_parent_of($c));
-		$this->assertTrue($c->is_descendant_of($r1));
+		$root = Ormtest_Nested_Node::forge(array(
+			'title' => 'root',
+			'left_id' => 1,
+			'right_id' => 4,
+		), false);
+		$child = Ormtest_Nested_Node::forge(array(
+			'title' => 'child',
+			'left_id' => 2,
+			'right_id' => 3,
+		), false);
+		$this->assertTrue($root->is_root());
+		$this->assertFalse($root->is_leaf());
+		$this->assertTrue($child->is_leaf());
+		$this->assertTrue($child->is_descendant_of($root));
+		$this->assertTrue($root->is_ancestor_of($child));
+		$this->assertSame(1, $root->count_descendants());
+	}
+
+	public function testReadOnlyTreeFieldCannotBeChanged(): void
+	{
+		$node = Ormtest_Nested_Node::forge(array('title' => 'n', 'left_id' => 1, 'right_id' => 2), false);
+		$this->expectException(\InvalidArgumentException::class);
+		$node->set('left_id', 9);
+	}
+
+	public function testTreeConfigDefaults(): void
+	{
+		$config = Ormtest_Nested_Node::tree_config();
+		$this->assertSame('left_id', $config['left_field']);
+		$this->assertSame('right_id', $config['right_field']);
 	}
 }

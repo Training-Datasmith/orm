@@ -1187,7 +1187,7 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
 		}
 		elseif ($key = array_search($property, static::$_property_map))
 		{
-			return $this->__unsset($key);
+			return $this->__unset($key);
 		}
 	}
 
@@ -2111,12 +2111,12 @@ class Model implements \ArrayAccess, \Iterator, \Sanitization
 				}
 				elseif ($rel instanceOf ManyMany)
 				{
-					$result = \DB::instance(static::connection(true))->select()->from($rel->table_through);
+					$query = \DB::select()->from($rel->table_through);
 					foreach ($rel->key_through_from as $i => $n)
 					{
 						$query->where($rel->key_through_from[$i], '=', $this->{$rel->key_from[$i]});
 					}
-					if ($query->get_one())
+					if ($query->execute(static::connection(true))->count())
 					{
 						if ($all)
 						{

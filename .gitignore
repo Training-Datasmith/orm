@@ -10,3 +10,9 @@ fuel/app/logs/*/*/*
 fuel/app/cache/*/*
 nbproject/
 .idea
+/vendor/
+/tests/fuel/
+composer.lock
+.phpunit.result.cache
+composer.phar
+tests/app/logs/

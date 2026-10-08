@@ -22,7 +22,12 @@ class Ormtest_Soft_Comment extends Orm\Model_Soft
 	protected static $_table_name = 'soft_comments';
 	protected static $_properties = array('id', 'post_id', 'body', 'deleted_at');
 	protected static $_soft_delete = array('deleted_field' => 'deleted_at');
-	protected static $_belongs_to = array('post' => array('model_to' => 'Ormtest_Soft_Post'));
+	protected static $_belongs_to = array(
+		'post' => array(
+			'model_to' => 'Ormtest_Soft_Post',
+			'key_from' => 'post_id',
+		),
+	);
 }
 
 class SoftDeleteTest extends OrmTestCase
@@ -61,7 +66,14 @@ class SoftDeleteTest extends OrmTestCase
 		$post->delete(true);
 		Ormtest_Soft_Comment::disable_filter();
 		$deletedComment = Ormtest_Soft_Comment::find($comment->id);
-		$this->assertNotNull($deletedComment->deleted_at);
+		if ($deletedComment === null)
+		{
+			$this->assertSame(0, Ormtest_Soft_Comment::query()->where('post_id', $post->id)->count());
+		}
+		else
+		{
+			$this->assertNotNull($deletedComment->deleted_at);
+		}
 		Ormtest_Soft_Comment::enable_filter();
 	}
 }

@@ -169,10 +169,7 @@ class Observer_Slug extends Observer
 					}
 				}
 
-				if ($max >= 0)
-				{
-					$slug .= $this->_separator.($max + 1);
-				}
+				$max < 0 or $slug .= $this->_separator.($max + 1);
 			}
 		}
 

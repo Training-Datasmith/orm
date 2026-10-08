@@ -563,7 +563,7 @@ class Observer_Typing
 	 *
 	 * @return  mixed
 	 */
-	public static function type_decrypt($var)
+	public static function type_decrypt($var, array $settings = array())
 	{
 		// decrypt it
 		if (array_key_exists('encryption_key', $settings))
@@ -575,7 +575,7 @@ class Observer_Typing
 			$var = \Crypt::decode($var);
 		}
 
-		return $var;
+		return static::type_unserialize($var, $settings);
 	}
 
 	/**

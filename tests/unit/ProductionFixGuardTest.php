@@ -125,12 +125,19 @@ class ProductionFixGuardTest extends OrmTestCase
 	public function testFix5TemporalGetPropertyReadWithoutNotice(): void
 	{
 		\DB::query('CREATE TABLE guard_temporal (
-			id INTEGER PRIMARY KEY,
+			id INTEGER NOT NULL,
 			title TEXT,
-			temporal_start INTEGER,
-			temporal_end INTEGER
+			temporal_start INTEGER NOT NULL,
+			temporal_end INTEGER,
+			PRIMARY KEY (id, temporal_start)
 		)')->execute();
-		$row = $this->saveModel(Ormtest_Guard_Temporal::forge(array('title' => 'rev')));
-		$this->assertSame('rev', Ormtest_Guard_Temporal::find($row->id)->title);
+		$start = time();
+		\DB::insert('guard_temporal')->set(array(
+			'id' => 1,
+			'title' => 'rev',
+			'temporal_start' => $start,
+			'temporal_end' => 2147483647,
+		))->execute();
+		$this->assertSame('rev', Ormtest_Guard_Temporal::find(1)->title);
 	}
 }

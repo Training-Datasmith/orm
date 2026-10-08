@@ -1,6 +1,7 @@
 <?php
 
 return array(
+	'auto_initialize' => false,
 	'driver' => 'file',
 	'cookie' => 'fuelcid',
 	'native_emulation' => false,

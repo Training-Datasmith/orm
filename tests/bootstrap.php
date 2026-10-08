@@ -11,16 +11,25 @@ if ( ! is_dir(PKGPATH))
 	mkdir(PKGPATH, 0777, true);
 }
 
-$ormLink = PKGPATH.'orm';
-if ( ! file_exists($ormLink))
-{
-	symlink(dirname(DOCROOT), $ormLink);
-}
+$packageLinks = array(
+	PKGPATH.'orm' => '../../../',
+	PKGPATH.'auth' => '../auth',
+);
 
-$authLink = PKGPATH.'auth';
-if ( ! file_exists($authLink))
+foreach ($packageLinks as $link => $target)
 {
-	symlink(DOCROOT.'fuel'.DIRECTORY_SEPARATOR.'auth', $authLink);
+	if (is_link($link))
+	{
+		$resolved = realpath(dirname($link).DIRECTORY_SEPARATOR.$target);
+		if ($resolved === false || realpath($link) !== $resolved)
+		{
+			unlink($link);
+		}
+	}
+	if ( ! file_exists($link))
+	{
+		symlink($target, $link);
+	}
 }
 
 require VENDORPATH.'autoload.php';
@@ -30,6 +39,12 @@ require COREPATH.'bootstrap.php';
 \Autoloader::register();
 
 \Fuel::$env = \Fuel::TEST;
+ini_set('session.use_cookies', '0');
+if (PHP_SAPI === 'cli')
+{
+	empty($_SERVER['REQUEST_URI']) and $_SERVER['REQUEST_URI'] = '/';
+	empty($_SERVER['HTTP_HOST']) and $_SERVER['HTTP_HOST'] = 'localhost';
+}
 \Fuel::init('config.php');
 \Package::load('orm');
 \Package::load('auth');

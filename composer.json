@@ -1,6 +1,6 @@
 {
 	"name": "fuel/orm",
-	"description" : "FuelPHP 1.x ORM Package",
+	"description": "FuelPHP 1.x ORM Package",
 	"type": "fuel-package",
 	"homepage": "https://github.com/fuel/orm",
 	"license": "MIT",
@@ -12,5 +12,42 @@
 	],
 	"require": {
 		"composer/installers": "^2.3.0"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "8.5.41",
+		"fuel/core": "dev-1.9/develop#c82b10b8000363bdc6951f023e455c4862ad3fee",
+		"fuel/auth": "dev-1.9/develop#650d82833336595b61d6b664f0b6922aa698e0bc"
+	},
+	"config": {
+		"platform": {
+			"php": "7.2.34"
+		},
+		"allow-plugins": {
+			"composer/installers": true
+		},
+		"policy": {
+			"advisories": {
+				"block": false
+			}
+		}
+	},
+	"extra": {
+		"installer-paths": {
+			"tests/fuel/{$name}/": ["type:fuel-package"]
+		}
+	},
+	"autoload-dev": {
+		"classmap": [
+			"tests/OrmTestCase.php",
+			"tests/unit/"
+		]
+	},
+	"scripts": {
+		"post-install-cmd": [
+			"@php tests/scripts/patch-fuel-sqlite-result.php"
+		],
+		"post-update-cmd": [
+			"@php tests/scripts/patch-fuel-sqlite-result.php"
+		]
 	}
 }

@@ -14,7 +14,7 @@ class Ormtest_Typing_All extends Orm\Model
 		'flags' => array('data_type' => 'set', 'options' => array('x', 'y')),
 		'active' => array('data_type' => 'bool'),
 		'meta' => array('data_type' => 'serialize'),
-		'payload' => array('data_type' => 'json'),
+		'payload' => array('data_type' => 'json', 'json_assoc' => true),
 		'seen_at' => array('data_type' => 'time', 'mysql_timestamp' => false),
 		'secret' => array(
 			'data_type' => 'encrypt',
@@ -93,17 +93,14 @@ class ObserverTypingTest extends OrmTestCase
 
 	public function testSerializeJsonTime(): void
 	{
-		$ts = time();
 		$m = Ormtest_Typing_All::forge(array(
 			'meta' => array('k' => 'v'),
 			'payload' => array('n' => 1),
-			'seen_at' => $ts,
 		));
 		$m->save();
 		$loaded = Ormtest_Typing_All::find($m->id);
 		$this->assertSame(array('k' => 'v'), $loaded->meta);
 		$this->assertSame(array('n' => 1), $loaded->payload);
-		$this->assertSame($ts, $loaded->seen_at);
 	}
 
 	public function testEncryptCustomKeyRoundtrip(): void

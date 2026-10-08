@@ -17,24 +17,47 @@ abstract class OrmTestCase extends \PHPUnit\Framework\TestCase
 	{
 		parent::setUp();
 		$this->resetOrmStaticState();
-		$this->dbFile = null;
 		if ( ! \Config::get('db.default'))
 		{
 			\Config::load('db', true);
 		}
+		$this->dbFile = sys_get_temp_dir().'/orm-test-'.uniqid('', true).'.sqlite';
 		$this->reconnectDatabase();
 	}
 
 	protected function tearDown(): void
 	{
 		$this->resetOrmStaticState();
+		$this->disconnectDatabase();
+		if ($this->dbFile && is_file($this->dbFile))
+		{
+			@unlink($this->dbFile);
+		}
 		parent::tearDown();
+	}
+
+	protected function disconnectDatabase(): void
+	{
+		foreach (array_keys(\Database_Connection::$instances) as $name)
+		{
+			try
+			{
+				\Database_Connection::$instances[$name]->disconnect();
+			}
+			catch (\Exception $e)
+			{
+			}
+		}
+		\Database_Connection::$instances = array();
 	}
 
 	protected function reconnectDatabase(): void
 	{
-		\Config::set('db.default.connection.dsn', 'sqlite::memory:');
-		\Database_Connection::$instances = array();
+		$this->disconnectDatabase();
+		putenv('FUEL_ORM_TEST_DSN=sqlite:'.$this->dbFile);
+		\Config::load('db', true, true);
+		$config = \Config::get('db.default');
+		\Database_Connection::instance('default', $config);
 		\DB::query('SELECT 1')->execute();
 	}
 

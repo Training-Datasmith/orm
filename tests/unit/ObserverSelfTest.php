@@ -8,7 +8,7 @@ class Ormtest_Self_Item extends Orm\Model
 
 	public $before_save_called = false;
 
-	protected function _event_before_save()
+	public function _event_before_save()
 	{
 		$this->before_save_called = true;
 	}

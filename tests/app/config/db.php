@@ -4,7 +4,7 @@ return array(
 	'default' => array(
 		'type' => 'pdo',
 		'connection' => array(
-			'dsn' => 'sqlite::memory:',
+			'dsn' => getenv('FUEL_ORM_TEST_DSN') ? getenv('FUEL_ORM_TEST_DSN') : 'sqlite::memory:',
 			'username' => null,
 			'password' => null,
 			'persistent' => false,

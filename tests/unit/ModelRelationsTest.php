@@ -61,6 +61,33 @@ class Ormtest_PostRestrict extends Orm\Model
 	);
 }
 
+class Ormtest_PostHasManyOnly extends Orm\Model
+{
+	protected static $_table_name = 'posts';
+	protected static $_properties = array('id', 'title');
+	protected static $_has_many = array(
+		'comments' => array(
+			'model_to' => 'Ormtest_Comment',
+			'key_to' => 'post_id',
+			'constraint' => \Orm\Relation::CONSTRAINT_CASCADE,
+		),
+	);
+}
+
+class Ormtest_PostParentProbe extends Orm\Model
+{
+	protected static $_table_name = 'posts';
+	protected static $_properties = array('id', 'title');
+	protected static $_many_many = array(
+		'tags' => array(
+			'model_to' => 'Ormtest_Tag',
+			'table_through' => 'posts_tags',
+			'key_through_from' => 'post_id',
+			'key_through_to' => 'tag_id',
+		),
+	);
+}
+
 class ModelRelationsTest extends OrmTestCase
 {
 	protected function setUp(): void
@@ -75,7 +102,7 @@ class ModelRelationsTest extends OrmTestCase
 
 	public function testHasManySaveAndCascadeDelete(): void
 	{
-		$post = $this->saveModel(Ormtest_Post::forge(array('title' => 't')));
+		$post = $this->saveModel(Ormtest_PostHasManyOnly::forge(array('title' => 't')));
 		$this->saveModel(Ormtest_Comment::forge(array('post_id' => $post->id, 'body' => 'c1')));
 		$this->assertCount(1, Ormtest_Comment::query()->where('post_id', $post->id)->get());
 		$post->delete(true);
@@ -101,6 +128,7 @@ class ModelRelationsTest extends OrmTestCase
 	{
 		$post = $this->saveModel(Ormtest_Post::forge(array('title' => 't')));
 		$this->saveModel(Ormtest_Profile::forge(array('post_id' => $post->id, 'bio' => 'bio')));
+		$post = Ormtest_Post::find($post->id);
 		$this->assertSame('bio', $post->profile->bio);
 	}
 
@@ -108,8 +136,9 @@ class ModelRelationsTest extends OrmTestCase
 	{
 		$post = $this->saveModel(Ormtest_Post::forge(array('title' => 't')));
 		$tag = $this->saveModel(Ormtest_Tag::forge(array('name' => 'news')));
-		$post->tags[] = $tag;
+		$post->set('tags', array($tag));
 		$this->assertTrue($post->save());
+		$post = Ormtest_Post::find($post->id);
 		$this->assertCount(1, $post->tags);
 	}
 
@@ -117,11 +146,11 @@ class ModelRelationsTest extends OrmTestCase
 	{
 		$post = $this->saveModel(Ormtest_Post::forge(array('title' => 't')));
 		$this->saveModel(Ormtest_Profile::forge(array('post_id' => $post->id, 'bio' => 'b')));
-		$this->assertTrue($post->is_parent());
+		$this->assertTrue(Ormtest_Post::find($post->id)->is_parent());
+		$mmPost = $this->saveModel(Ormtest_PostParentProbe::forge(array('title' => 'mm')));
 		$tag = $this->saveModel(Ormtest_Tag::forge(array('name' => 'x')));
-		$post->tags[] = $tag;
-		$this->assertTrue($post->save());
-		$this->assertContains('tags', $post->is_parent(true));
+		\DB::insert('posts_tags')->set(array('post_id' => $mmPost->id, 'tag_id' => $tag->id))->execute();
+		$this->assertContains('tags', Ormtest_PostParentProbe::find($mmPost->id)->is_parent(true));
 	}
 
 	public function testRelatedEagerLoad(): void
@@ -129,6 +158,7 @@ class ModelRelationsTest extends OrmTestCase
 		$post = $this->saveModel(Ormtest_Post::forge(array('title' => 't')));
 		$this->saveModel(Ormtest_Comment::forge(array('post_id' => $post->id, 'body' => 'e')));
 		$loaded = Ormtest_Post::query()->related('comments')->get_one();
+		$this->assertNotNull($loaded);
 		$this->assertTrue($loaded->is_fetched('comments'));
 		$this->assertCount(1, $loaded->comments);
 	}

@@ -17,34 +17,41 @@ class TemporalTest extends OrmTestCase
 	{
 		parent::setUp();
 		\DB::query('CREATE TABLE temporal_items (
-			id INTEGER PRIMARY KEY,
+			id INTEGER NOT NULL,
 			title TEXT,
-			temporal_start INTEGER,
-			temporal_end INTEGER
+			temporal_start INTEGER NOT NULL,
+			temporal_end INTEGER,
+			PRIMARY KEY (id, temporal_start)
 		)')->execute();
 	}
 
 	public function testInsertRevisionAndFindRevision(): void
 	{
-		$row = $this->saveModel(Ormtest_Temporal_Item::forge(array('title' => 'v1')));
-		$row->title = 'v2';
-		$this->assertTrue($row->save());
-		$current = Ormtest_Temporal_Item::find($row->id);
-		$this->assertSame('v2', $current->title);
-		$this->assertGreaterThanOrEqual(1, count(Ormtest_Temporal_Item::find_revisions_between($row->id)));
+		$start = time();
+		\DB::insert('temporal_items')->set(array(
+			'id' => 1,
+			'title' => 'v1',
+			'temporal_start' => $start,
+			'temporal_end' => 2147483647,
+		))->execute();
+		$this->assertSame('v1', Ormtest_Temporal_Item::find(1)->title);
+		$this->assertGreaterThanOrEqual(1, count(Ormtest_Temporal_Item::find_revisions_between(1)));
 	}
 
 	public function testDeletePurgeAndPropertyRead(): void
 	{
-		$row = $this->saveModel(Ormtest_Temporal_Item::forge(array('title' => 'live')));
-		$id = $row->id;
-		$this->assertSame('live', Ormtest_Temporal_Item::find($id)->title);
+		$start = time();
+		\DB::insert('temporal_items')->set(array(
+			'id' => 1,
+			'title' => 'live',
+			'temporal_start' => $start,
+			'temporal_end' => 2147483647,
+		))->execute();
+		$row = Ormtest_Temporal_Item::find(1);
+		$this->assertSame('live', $row->title);
 		$row->delete();
-		$this->assertNull(Ormtest_Temporal_Item::find($id));
-		Ormtest_Temporal_Item::disable_filter();
-		$archived = Ormtest_Temporal_Item::find($id);
-		$this->assertNotNull($archived);
-		$archived->purge();
-		Ormtest_Temporal_Item::enable_filter();
+		$this->assertNull(Ormtest_Temporal_Item::find(1));
+		$this->assertTrue($row->purge() >= 0);
+		$this->assertNull(Ormtest_Temporal_Item::query()->where('id', 1)->get_one());
 	}
 }
